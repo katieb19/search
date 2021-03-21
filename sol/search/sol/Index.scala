@@ -57,6 +57,7 @@ class Index(val inputFile: String) {
       for (m <- matchesList) {
         // if m is a link (regex)
         if (m.matches("\\[\\[[^\\[]+?\\]\\]")) {
+          //NOTE TO SELF: need to check that word being added doesnt include [] in it
           //        then populate the id to link hashmap
           //        then check if link is not category format
           //             if it isnt then populate word to freq table
@@ -80,7 +81,7 @@ class Index(val inputFile: String) {
           }
           //else if category
           else {
-            //add to id to link (DO WE NEED TO ADD TO ID TO WORDS???)
+            //add to id to link (DO WE NEED TO ADD TO ID TO WORDS???) //Im thinking of regex
             val newSet = new mutable.HashSet[String]()
             newSet.add(m)
             idToLinks(id.text.toInt) = newSet
