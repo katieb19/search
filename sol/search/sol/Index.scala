@@ -3,6 +3,7 @@ package search.sol
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
+import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
 import scala.xml.{Node, NodeSeq}
@@ -20,7 +21,7 @@ class Index(val inputFile: String) {
   //Hash tables
   private val idToTitle = new HashMap()[Int, String]
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
-  private val idToLinks = new HashMap()[Int, Array[String]]
+  private val idToLinks = new HashMap()[Int, mutable.HashSet[String]]
 
 
   def looping(): Unit = {
@@ -55,14 +56,34 @@ class Index(val inputFile: String) {
       //for loop
       for (m <- matchesList) {
         // if m is a link (regex)
-        if (m.matches("\\[\\[[^\\[]+?\\]\\]") {
+        if (m.matches("\\[\\[[^\\[]+?\\]\\]")) {
           //        then populate the id to link hashmap
-          val newArray = new Array[String](1000)
-          idToLinks(id.text.toInt) = newArray + m //how to add element to array
           //        then check if link is not category format
           //             if it isnt then populate word to freq table
-          if (!m.contains("Category:")) {
+          //case that link doesnt have caegory or |
+          if (!m.contains("|") | !m.contains("Category:")) {
+            val newSet = new mutable.HashSet[String]()
+            newSet.add(m)
+            idToLinks(id.text.toInt) = newSet
             addFunWord(id.text.toInt, m, idToWords)
+          }
+          //case that link has |
+          else if (m.contains("|")) {
+            //populate idtolink
+            val newSet = new mutable.HashSet[String]()
+            newSet.add(m) //NEED TO ADD STUFF BEFORE | (how?)
+            idToLinks(id.text.toInt) = newSet
+            //add word after |
+            val array1 = m.split("|") //how to remove the words after | and |?????
+            //populate add fun word
+            addFunWord(id.text.toInt, array1[1], idToWords)
+          }
+          //else if category
+          else {
+            //add to id to link (DO WE NEED TO ADD TO ID TO WORDS???)
+            val newSet = new mutable.HashSet[String]()
+            newSet.add(m)
+            idToLinks(id.text.toInt) = newSet
           }
         }
         // else check if word isnt a stop word
