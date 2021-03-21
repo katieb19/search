@@ -31,6 +31,20 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   private val wordsToDocumentFrequencies = new HashMap[String, HashMap[Int, Double]]
 
 
+  //Relevance Score tf idf here
+
+  //    Perform some sort of computation (addition/multiplication/etc.)
+  //    combining TD*IDF and the score from PageRank algorithm => output the final score for each page
+  //      (please refer to the roadmap below);
+  //    Word relevance score = TD * IDF; PageRank score (see below to calculate score)
+  //    Recommended to moving to querier
+  //    Multiply PR & tf *idf
+
+  def relevanceScore() : Integer = { //how to get the tf idf (from max frequencies?)
+    return tf * idf * pageRank // how to call if from the indexer
+  }
+
+
   /**
    * Handles a single query and prints out results
    *
@@ -40,7 +54,6 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
     // TODO : Fill this in
     println("Implement query!")
 
-    //relevance score tf idf here
   }
 
   /**
