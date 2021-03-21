@@ -39,6 +39,8 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   private def query(userQuery: String) {
     // TODO : Fill this in
     println("Implement query!")
+
+    //relevance score tf idf here
   }
 
   /**

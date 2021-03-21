@@ -19,9 +19,10 @@ class Index(val inputFile: String) {
   val mainNode: Node = xml.XML.loadFile(inputFile)
 
   //Hash tables
-  private val idToTitle = new HashMap()[Int, String]
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]]
+  private val idToTitle = new HashMap()[Int, String]
+  private val idToPages = new HashMap()[id: Int, Array[linkedPage : String]]
 
 
   def looping(): Unit = {
@@ -61,7 +62,7 @@ class Index(val inputFile: String) {
           //        then populate the id to link hashmap
           //        then check if link is not category format
           //             if it isnt then populate word to freq table
-          //case that link doesnt have caegory or |
+          //case that link doesnt have category or |
           if (!m.contains("|") | !m.contains("Category:")) {
             val newSet = new mutable.HashSet[String]()
             newSet.add(m)
@@ -111,6 +112,65 @@ class Index(val inputFile: String) {
     }
   }
 
+  //
+
+
+  def weight(): HashMap = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
+    initWeight = 0.0
+
+    //Total number of pages
+    val n = idToPages.size()
+
+    //Total number of links in a page
+    val m = idToPages.get(k).size()
+
+    //Initialize empty outer HashMap
+    private val outer = new HashMap()
+
+    //Initialize empty inner HashMap
+    private val inner = new HashMap()
+
+    for (jID <- idToPages){ //how to call for value in idToPages
+      for (linkedPage <- Array[linkedPage]){
+        if (linkedPage.title == jPage.title){
+          weight = (epsilon/n) + (1-epsilon)/m
+        } else {
+          weight = epsilon/n
+        }
+        inner.put(kID -> (kID -> inner.weight())) //key = k, value = weight in inner hashmap
+      }
+      outer.put(jID -> inner)
+    }
+    return outerArray
+
+  }
+
+
+  def distance(previous Array[Double], current Array[Double]): Double = {
+    sumDifferences = 0.0
+    for (element <- previous){
+      for (curr <- current){
+        sumDifferences + curr - element
+      }
+    }
+    return distance = sqrt(sumDifferences ^ 2)
+  }
+
+  def pageRank() : HashMap = { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
+    weight = weight()
+    previousR = Array.fill(n)(0) //array of n zeros
+    currentR = Array.fill(n)(1/n)
+    while(distance(previousR, currentR) >  0.0001){
+      previousR = currentR
+      for (j<- 0 to n-1){
+        currentR(j) = 0.0
+        for (k<-0 to n-1){
+          currentR(j) = currentR(j) + weight(j)(k)*previousR(k)
+        }
+      }
+    }
+    return currentR
+  }
 
 }
 
