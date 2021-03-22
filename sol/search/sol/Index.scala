@@ -23,7 +23,7 @@ class Index(val inputFile: String) {
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
-  private val idToRank = new HashMap()[Int, Int]
+  private val idToRank = new HashMap()[Int, Double]
 
   //Total number of pages
   val n = idToLinks.size
@@ -119,15 +119,21 @@ class Index(val inputFile: String) {
 
 
   //Calculate weight of page k on page j
-  def weight(pageK: Int, pageJ: Int): Int = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
+  def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(pageK).size
 
+    // loop through idtoLinks if unique is 0
+    //add this page to every id except itself
+    // one page in corpus doesnt have any links --> since it impacts every page
+
+    //TAKE INTO ACCOUNT THAT UNIQUE IS = 0 will impact every other page
+
     //get title of j
     val titleJ = idToTitle.get(pageJ)
 
-    //here is epsilon --> CHECK VALUE
+    //here is epsilon
     val epsilon = 0.15
 
     //If k links to j
@@ -153,8 +159,13 @@ class Index(val inputFile: String) {
 
   def pageRank() { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
     // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
-    var previousR = Array.fill(n)(0) //array of n zeros
-    val currentR = Array.fill(n)(1 / n)
+    var previousR = new HashMap()[Int, Double]
+    //array of n zeros //Hashmap (key: id, value: array)
+    val currentR = new HashMap()[Int, Double]
+    for ((id, _) <- idToTitle) {
+      previousR.put(id, 0)
+      currentR.put(id, 1 / n)
+    }
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
       for (j <- 0 to n - 1) {
