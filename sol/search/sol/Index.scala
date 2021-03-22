@@ -20,9 +20,8 @@ class Index(val inputFile: String) {
 
   //Hash tables
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
-  private val idToLinks = new HashMap()[Int, mutable.HashSet[String]]
+  private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
-  private val idToPages = new HashMap()[id: Int, Array[linkedPage : String]]
 
 
   def looping(): Unit = {
@@ -65,6 +64,7 @@ class Index(val inputFile: String) {
           //case that link doesnt have category or |
           if (!m.contains("|") | !m.contains("Category:")) {
             val newSet = new mutable.HashSet[String]()
+            //take out square brackets//DO WE NEED TO AND HOW?
             newSet.add(m)
             idToLinks(id.text.toInt) = newSet
             addFunWord(id.text.toInt, m, idToWords)
@@ -112,60 +112,52 @@ class Index(val inputFile: String) {
     }
   }
 
-  //
 
-
-  def weight(): HashMap = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
-    initWeight = 0.0
-
+  //Calculate weight of page k on page j
+  def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
     //Total number of pages
-    val n = idToPages.size()
+    val n = idToLinks.size
 
-    //Total number of links in a page
-    val m = idToPages.get(k).size()
+    //Total number of unique pages that k links to
+    val unique = idToLinks.get(pageK).size
 
-    //Initialize empty outer HashMap
-    private val outer = new HashMap()
+    //get title of j
+    val titleJ = idToTitle.get(pageJ)
 
-    //Initialize empty inner HashMap
-    private val inner = new HashMap()
+    //here is epsilon --> CHECK VALUE
+    val epsilon = 0.15
 
-    for (jID <- idToPages){ //how to call for value in idToPages
-      for (linkedPage <- Array[linkedPage]){
-        if (linkedPage.title == jPage.title){
-          weight = (epsilon/n) + (1-epsilon)/m
-        } else {
-          weight = epsilon/n
-        }
-        inner.put(kID -> (kID -> inner.weight())) //key = k, value = weight in inner hashmap
-      }
-      outer.put(jID -> inner)
+    //If k links to j
+    if (idToLinks.get(pageK).contains(titleJ)) {
+      (epsilon / n) + ((1 - epsilon) / unique)
     }
-    return outerArray
-
+    else {
+      epsilon / n
+    }
   }
 
 
-  def distance(previous Array[Double], current Array[Double]): Double = {
-    sumDifferences = 0.0
-    for (element <- previous){
-      for (curr <- current){
-        sumDifferences + curr - element
+  //Calculate the distance between r and r'
+  def distance(previous: Array[Double], current: Array[Double]): Double = {
+    val sumDifferences = 0.0
+    for (element <- previous) {
+      for (curr <- current) {
+        sumDifferences + scala.math.pow(curr - element, 2)
       }
     }
-    return distance = sqrt(sumDifferences ^ 2)
+    scala.math.sqrt(sumDifferences)
   }
 
-  def pageRank() : HashMap = { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
-    weight = weight()
-    previousR = Array.fill(n)(0) //array of n zeros
-    currentR = Array.fill(n)(1/n)
-    while(distance(previousR, currentR) >  0.0001){
+  def pageRank(): HashMap = { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
+    val weight = weight()
+    val previousR = Array.fill(n)(0) //array of n zeros
+    val currentR = Array.fill(n)(1 / n)
+    while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
-      for (j<- 0 to n-1){
+      for (j <- 0 to n - 1) {
         currentR(j) = 0.0
-        for (k<-0 to n-1){
-          currentR(j) = currentR(j) + weight(j)(k)*previousR(k)
+        for (k <- 0 to n - 1) {
+          currentR(j) = currentR(j) + weight(j)(k) * previousR(k)
         }
       }
     }
