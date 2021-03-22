@@ -3,6 +3,7 @@ package search.sol
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
+import java.lang.StrictMath.multiplyExact
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
@@ -22,6 +23,10 @@ class Index(val inputFile: String) {
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
+  private val idToRank = new HashMap()[Int, Int]
+
+  //Total number of pages
+  val n = idToLinks.size
 
 
   def looping(): Unit = {
@@ -114,9 +119,7 @@ class Index(val inputFile: String) {
 
 
   //Calculate weight of page k on page j
-  def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
-    //Total number of pages
-    val n = idToLinks.size
+  def weight(pageK: Int, pageJ: Int): Int = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(pageK).size
@@ -138,7 +141,7 @@ class Index(val inputFile: String) {
 
 
   //Calculate the distance between r and r'
-  def distance(previous: Array[Double], current: Array[Double]): Double = {
+  def distance(previous: Array[Int], current: Array[Int]): Double = {
     val sumDifferences = 0.0
     for (element <- previous) {
       for (curr <- current) {
@@ -148,20 +151,26 @@ class Index(val inputFile: String) {
     scala.math.sqrt(sumDifferences)
   }
 
-  def pageRank(): HashMap = { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
-    val weight = weight()
-    val previousR = Array.fill(n)(0) //array of n zeros
+  def pageRank() { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
+    // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
+    var previousR = Array.fill(n)(0) //array of n zeros
     val currentR = Array.fill(n)(1 / n)
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
       for (j <- 0 to n - 1) {
-        currentR(j) = 0.0
+        currentR(j) = 0
         for (k <- 0 to n - 1) {
-          currentR(j) = currentR(j) + weight(j)(k) * previousR(k)
+          currentR(j) = currentR(j) + multiplyExact(weight(j, k), previousR(k))
         }
       }
     }
-    return currentR
+    //add the value + corresponding page to hashmap
+    //QUESTIONNN FOR TA
+    var holding = 0
+    for (item <- currentR) {
+      idToRank.put(holding, item)
+      holding + 1
+    }
   }
 
 }
