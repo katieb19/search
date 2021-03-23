@@ -281,7 +281,7 @@ class Index(val inputFile: String) {
         }
       }
     }
-    
+
     for ((word, newMap) <- WordstoPage){
       if (i == word){
         for ((id, maxFreq) <- newMap){
@@ -314,7 +314,7 @@ object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
     //just print ones
-    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage) //why is this an error yikes
+    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage) //Clark said it should be ok (?
     printTitleFile("titles.txt", Index1.idToTitle)
     printWordsFile("words.txt", Index1.WordstoPage)
     System.out.println("Not implemented yet!")
