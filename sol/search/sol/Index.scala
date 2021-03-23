@@ -1,5 +1,6 @@
 package search.sol
 
+import search.src.FileIO.printTitleFile
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
@@ -13,16 +14,15 @@ import scala.xml.{Node, NodeSeq}
  *
  * @param inputFile - the filename of the XML wiki to be indexed
  */
+
 class Index(val inputFile: String) {
-  // TODO : Implement!
-
-  val mainNode: Node = xml.XML.loadFile(inputFile)
-
   //Hash tables
   private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
   private val idToRank = new HashMap()[Int, Double]
+  val mainNode: Node = xml.XML.loadFile(inputFile)
+
 
   //Total number of pages
   val n = idToLinks.size
@@ -119,24 +119,6 @@ class Index(val inputFile: String) {
 
   //Calculate weight of page k on page j
   def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
-    // value to hold the pages that link to no other pages so it can be
-    // counted for every page
-    val extraLink = new mutable.HashSet[String]()
-    // takes care of case tht page has no links or contains its own page in link
-    for (item <- idToLinks) {
-      val unique2 = idToLinks.get(item._1).size
-      if (item._2.contains(idToTitle(item._1)) {
-        item._2 -= idToTitle(item._1)
-      }
-      else if (unique2 == 0) {
-        extraLink.add(idToTitle(item._1))
-      }
-    }
-    //adds the extra pages to the link of every page
-    for (item <- idToLinks) {
-      val update = item._2 + extraLink
-      idToLinks(item) = update
-    }
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(pageK).size
@@ -185,9 +167,9 @@ class Index(val inputFile: String) {
     }
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
-      for (j <- 0 to n - 1) {
+      for (j <- 0 until n) {
         currentR(j) = 0
-        for (k <- 0 to n - 1) {
+        for (k <- 0 until n) {
           currentR(j) = currentR(j) + (weight(j, k) * previousR(k))
         }
       }
@@ -201,7 +183,7 @@ class Index(val inputFile: String) {
 
 object Index {
   def main(args: Array[String]) {
-    // TODO : Implement!
+    printTitleFile("titles.txt", idToTitle)
     System.out.println("Not implemented yet!")
   }
 }
