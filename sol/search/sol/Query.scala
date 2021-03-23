@@ -41,7 +41,8 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   //    Multiply PR & tf *idf
 
 
-  def maxFreq(): HashMap = { //input = document
+  //helper hashtable
+  def maxHashMap(): HashMap = { //input = document
     //for word in document
     // if (newHashMap.contains(word){
     // word.value ++
@@ -51,12 +52,19 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
 
   }
 
+  //populate given idsToMaxFrequencies
+  def maxFreq(): Unit = { //hashtable of id to title
+    //each id represents each document
+    //for (each id in hashmap)
+    //current documentHashMap = maxHashMap(document)
+    //idstoMaxFrequencies.put(id, documentHashMap.max)
+  }
+
   def termFrequency(): Double ={
-    // val termMap = maxFreq(input for term freq)
+    // val termMap = maxHashMap(input for term freq)
     //val c = termMap(word inputted)
     //val a = termMap.max
     //return final = c/a
-
   }
 
   def inverseFrequency(): Double = {
@@ -64,7 +72,12 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   }
 
   def relevanceScore() : Integer = { //how to get the tf idf (from max frequencies?)
+
+    //val tf = termFrequency()
+    //val idf = inverseFrequency()
+    //val pageRank = pageRank() -> how do we get page rank from indexer
     return tf * idf * pageRank // how to call if from the indexer
+
   }
 
 
