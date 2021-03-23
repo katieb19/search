@@ -3,7 +3,6 @@ package search.sol
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
-import java.lang.StrictMath.multiplyExact
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
@@ -120,6 +119,24 @@ class Index(val inputFile: String) {
 
   //Calculate weight of page k on page j
   def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
+    // value to hold the pages that link to no other pages so it can be
+    // counted for every page
+    val extraLink = new mutable.HashSet[String]()
+    // takes care of case tht page has no links or contains its own page in link
+    for (item <- idToLinks) {
+      val unique2 = idToLinks.get(item._1).size
+      if (item._2.contains(idToTitle(item._1)) {
+        item._2 -= idToTitle(item._1)
+      }
+      else if (unique2 == 0) {
+        extraLink.add(idToTitle(item._1))
+      }
+    }
+    //adds the extra pages to the link of every page
+    for (item <- idToLinks) {
+      val update = item._2 + extraLink
+      idToLinks(item) = update
+    }
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(pageK).size
@@ -147,10 +164,10 @@ class Index(val inputFile: String) {
 
 
   //Calculate the distance between r and r'
-  def distance(previous: Array[Int], current: Array[Int]): Double = {
+  def distance(previous: mutable.HashMap[Int, Double], current: mutable.HashMap[Int, Double]): Double = {
     val sumDifferences = 0.0
-    for (element <- previous) {
-      for (curr <- current) {
+    for (element <- previous.values) {
+      for (curr <- current.values) {
         sumDifferences + scala.math.pow(curr - element, 2)
       }
     }
@@ -159,9 +176,9 @@ class Index(val inputFile: String) {
 
   def pageRank() { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
     // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
-    var previousR = new HashMap()[Int, Double]
+    var previousR = new mutable.HashMap()[Int, Double]
     //array of n zeros //Hashmap (key: id, value: array)
-    val currentR = new HashMap()[Int, Double]
+    val currentR = new mutable.HashMap()[Int, Double]
     for ((id, _) <- idToTitle) {
       previousR.put(id, 0)
       currentR.put(id, 1 / n)
@@ -171,18 +188,16 @@ class Index(val inputFile: String) {
       for (j <- 0 to n - 1) {
         currentR(j) = 0
         for (k <- 0 to n - 1) {
-          currentR(j) = currentR(j) + multiplyExact(weight(j, k), previousR(k))
+          currentR(j) = currentR(j) + (weight(j, k) * previousR(k))
         }
       }
     }
     //add the value + corresponding page to hashmap
-    //QUESTIONNN FOR TA
-    var holding = 0
-    for (item <- currentR) {
-      idToRank.put(holding, item)
-      holding + 1
+    for ((id, value) <- currentR) {
+      idToRank.put(id, value)
     }
   }
+  
 
 }
 
