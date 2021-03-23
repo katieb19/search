@@ -68,6 +68,11 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   }
 
   def inverseFrequency(): Double = {
+    //val n = total number of documents - count number of ids (keys) in hashtable
+    //val n_j = number of documents that contain term i (word)
+    //for (word in WordsToPage)
+    //size of value (hashmap)
+    //WordsToDocumentFrequencies.put(word, (id, size)
 
   }
 
