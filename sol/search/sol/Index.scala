@@ -69,11 +69,12 @@ class Index(val inputFile: String) {
           if (!m.contains("|") | !m.contains("Category:")) {
             val newSet = new mutable.HashSet[String]()
             //take out square brackets//DO WE NEED TO AND HOW?
+            // Use regex and then it ll pick up all of the words in list to add in loop through
             newSet.add(m)
             idToLinks(id.text.toInt) = newSet
             addFunWord(id.text.toInt, m, WordstoPage)
           }
-          //case that link has |
+          //case that link has Presidents|Washington
           else if (m.contains("|")) {
             //populate idtolink
             val newSet = new mutable.HashSet[String]()
@@ -84,7 +85,8 @@ class Index(val inputFile: String) {
             //populate add fun word
             addFunWord(id.text.toInt, array1[1], WordstoPage)
           }
-          //else if category
+          //else if category [Category: Computer Science] --> Category: Computer Science
+          // category, computer, science --> added to word list
           else {
             //add to id to link (DO WE NEED TO ADD TO ID TO WORDS???) //Im thinking of regex
             val newSet = new mutable.HashSet[String]()
@@ -183,7 +185,9 @@ class Index(val inputFile: String) {
 
 object Index {
   def main(args: Array[String]) {
-    printTitleFile("titles.txt", idToTitle)
+    val Index1 = new Index(args(0))
+    //just print ones
+    printTitleFile("titles.txt", Index1.idToTitle)
     System.out.println("Not implemented yet!")
   }
 }
