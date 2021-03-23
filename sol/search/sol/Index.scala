@@ -1,6 +1,6 @@
 package search.sol
 
-import search.src.FileIO.printTitleFile
+import search.src.FileIO.{printTitleFile, printWordsFile}
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
@@ -188,6 +188,7 @@ object Index {
     val Index1 = new Index(args(0))
     //just print ones
     printTitleFile("titles.txt", Index1.idToTitle)
+    printWordsFile("words.txt", Index1.WordstoPage)
     System.out.println("Not implemented yet!")
   }
 }
