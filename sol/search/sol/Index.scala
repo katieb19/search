@@ -269,25 +269,27 @@ class Index(val inputFile: String) {
 
   private val termMap = new HashMap[String, Double]
 
-  def termFrequency(): Double = {
-    for (word <- WordsToPage.keys){ //why doesn't it recognize it lol?
-      val c = 0
-      val a = 0
-      for ((jId, wordsMap) <- idToWords) {
-        
-        if ()
+  def termFrequency(i: String, j: Int ): Double = {
+
+    var c = 0.0
+    var a = 0.0
+
+    for ((jId, wordsMap) <- idToWords) {
+      if (jId == j) {
+        for ((key, value) <- wordsMap) {
+          c = value
+        }
       }
-      val c = termMap(word inputted)
-
-
-      termMap.put(word, )
     }
-
-
-    // val termMap = maxHashMap(input for term freq)
-    //val c = termMap(word inputted)
-    //val a = termMap.max
-    //return final = c/a
+    
+    for ((word, newMap) <- WordstoPage){
+      if (i == word){
+        for ((id, maxFreq) <- newMap){
+          a = maxFreq
+        }
+      }
+    }
+    c/a
   }
 
   def inverseFrequency(): Double = {
