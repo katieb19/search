@@ -260,14 +260,30 @@ class Index(val inputFile: String) {
       for ((innerId, value) <- innerMap) {
         for ((id, maxFreq) <- innerMaxFreq) {
           if (innerId == id) {
-            value = maxFreq
+            value = maxFreq //it is a VAR UGHHHH
           }
         }
       }
     }
   }
 
+  private val termMap = new HashMap[String, Double]
+
   def termFrequency(): Double = {
+    for (word <- WordsToPage.keys){ //why doesn't it recognize it lol?
+      val c = 0
+      val a = 0
+      for ((jId, wordsMap) <- idToWords) {
+        
+        if ()
+      }
+      val c = termMap(word inputted)
+
+
+      termMap.put(word, )
+    }
+
+
     // val termMap = maxHashMap(input for term freq)
     //val c = termMap(word inputted)
     //val a = termMap.max
@@ -296,7 +312,7 @@ object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
     //just print ones
-    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage)
+    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage) //why is this an error yikes
     printTitleFile("titles.txt", Index1.idToTitle)
     printWordsFile("words.txt", Index1.WordstoPage)
     System.out.println("Not implemented yet!")
