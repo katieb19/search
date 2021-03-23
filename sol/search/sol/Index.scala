@@ -17,7 +17,7 @@ import scala.xml.{Node, NodeSeq}
 
 class Index(val inputFile: String) {
   //Hash tables
-  private val idToWords = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
+  private val WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
   private val idToRank = new HashMap()[Int, Double]
@@ -71,7 +71,7 @@ class Index(val inputFile: String) {
             //take out square brackets//DO WE NEED TO AND HOW?
             newSet.add(m)
             idToLinks(id.text.toInt) = newSet
-            addFunWord(id.text.toInt, m, idToWords)
+            addFunWord(id.text.toInt, m, WordstoPage)
           }
           //case that link has |
           else if (m.contains("|")) {
@@ -82,7 +82,7 @@ class Index(val inputFile: String) {
             //add word after |
             val array1 = m.split("|") //how to remove the words after | and |?????
             //populate add fun word
-            addFunWord(id.text.toInt, array1[1], idToWords)
+            addFunWord(id.text.toInt, array1[1], WordstoPage)
           }
           //else if category
           else {
@@ -97,16 +97,16 @@ class Index(val inputFile: String) {
           //        then take the stem of said word
           val stemWord = stem(m)
           //        then populate word to freq table
-          addFunWord(id.text.toInt, stemWord, idToWords)
+          addFunWord(id.text.toInt, stemWord, WordstoPage)
         }
       }
     }
   }
 
-  def addFunWord(id: Int, wd: String, hM: HashMap[String, HashMap[Int, Double]]): Unit = {
+  def addFunWord(id: Int, wd: String, hM: mutable.HashMap[String, mutable.HashMap[Int, Double]]): Unit = {
     //adds a word to a hashmap
     if (!hM.contains(wd)) {
-      val addHash = new HashMap()[Int, Double]
+      val addHash = new mutable.HashMap()[Int, Double]
       addHash(id) = 1
       hM += (wd -> addHash)
     }
