@@ -7,14 +7,16 @@ import search.src.{FileIO}
 import scala.collection.mutable.HashMap
 
 /**
- * Represents a query REPL built off of a specified index
- *
- * @param titleIndex    - the filename of the title index
- * @param documentIndex - the filename of the document index
- * @param wordIndex     - the filename of the word index
- * @param usePageRank   - true if page rank is to be incorporated into scoring
- */
-class Query(titleIndex: String, documentIndex: String, wordIndex: String,
+  * Represents a query REPL built off of a specified index
+  *
+  * @param titleIndex    - the filename of the title index
+  * @param documentIndex - the filename of the document index
+  * @param wordIndex     - the filename of the word index
+  * @param usePageRank   - true if page rank is to be incorporated into scoring
+  */
+class Query(titleIndex: String,
+            documentIndex: String,
+            wordIndex: String,
             usePageRank: Boolean) {
 
   // Maps the document ids to the title for each document
@@ -28,8 +30,8 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
 
   // Maps each word to a map of document IDs and frequencies of documents that
   // contain that word
-  private val wordsToDocumentFrequencies = new HashMap[String, HashMap[Int, Double]]
-
+  private val wordsToDocumentFrequencies =
+    new HashMap[String, HashMap[Int, Double]]
 
   //Relevance Score tf idf here
 
@@ -40,9 +42,8 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   //    Recommended to moving to querier
   //    Multiply PR & tf *idf
 
-
   //helper hashtable
-  def maxHashMap(): HashMap = { //input = document
+  def maxHashMap(): HashMap = { //text content each page
     //for word in document
     // if (newHashMap.contains(word){
     // word.value ++
@@ -60,7 +61,7 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
     //idstoMaxFrequencies.put(id, documentHashMap.max)
   }
 
-  def termFrequency(): Double ={
+  def termFrequency(): Double = {
     // val termMap = maxHashMap(input for term freq)
     //val c = termMap(word inputted)
     //val a = termMap.max
@@ -76,21 +77,21 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
 
   }
 
-  def relevanceScore() : Integer = { //how to get the tf idf (from max frequencies?)
+  def relevanceScore()
+    : Integer = { //how to get the tf idf (from max frequencies?)
 
     //val tf = termFrequency()
     //val idf = inverseFrequency()
     //val pageRank = pageRank() -> how do we get page rank from indexer
-    return tf * idf * pageRank // how to call if from the indexer
+    //return tf * idf * pageRank // how to call if from the indexer
 
   }
 
-
   /**
-   * Handles a single query and prints out results
-   *
-   * @param userQuery - the query text
-   */
+    * Handles a single query and prints out results
+    *
+    * @param userQuery - the query text
+    */
   private def query(userQuery: String) {
     // TODO : Fill this in
     println("Implement query!")
@@ -98,10 +99,10 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   }
 
   /**
-   * Format and print up to 10 results from the results list
-   *
-   * @param results - an array of all results to be printed
-   */
+    * Format and print up to 10 results from the results list
+    *
+    * @param results - an array of all results to be printed
+    */
   private def printResults(results: Array[Int]) {
     for (i <- 0 until Math.min(10, results.size)) {
       println("\t" + (i + 1) + " " + idsToTitle(results(i)))
@@ -118,8 +119,8 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   }
 
   /**
-   * Starts the read and print loop for queries
-   */
+    * Starts the read and print loop for queries
+    */
   def run() {
     val inputReader = new BufferedReader(new InputStreamReader(System.in))
 
@@ -161,11 +162,14 @@ object Query {
         docIndex = 2
         wordIndex = 3
       } else if (args.size != 3) {
-        println("Incorrect arguments. Please use [--pagerank] <titleIndex> "
-          + "<documentIndex> <wordIndex>")
+        println(
+          "Incorrect arguments. Please use [--pagerank] <titleIndex> "
+            + "<documentIndex> <wordIndex>"
+        )
         System.exit(1)
       }
-      val query: Query = new Query(args(titleIndex), args(docIndex), args(wordIndex), pageRank)
+      val query: Query =
+        new Query(args(titleIndex), args(docIndex), args(wordIndex), pageRank)
       query.readFiles()
       query.run()
     } catch {

@@ -17,10 +17,13 @@ import scala.xml.{Node, NodeSeq}
 
 class Index(val inputFile: String) {
   //Hash tables
-  private val WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word --> hashmap of int (id) to relevance (double
+  private var WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word -->[int (id) -> max Freq]
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
   private val idToRank = new HashMap()[Int, Double]
+  private val idToWords = new HashMap()[Int, HashMap[String, Int]] //id to [Words, # times it appears]
+
+
   val mainNode: Node = xml.XML.loadFile(inputFile)
 
 
@@ -41,8 +44,11 @@ class Index(val inputFile: String) {
 
       //Populate idToTitle
       idToTitle(id.text.toInt) = title.text
+      for ((id, title)<- idToTitle){
+        idToWords.put(id, HashMap.empty[String, Int])
+      }
 
-      //Populate idToWords
+      //Populate WordsToPage
       val idSeq: NodeSeq = page \ "text"
 
       //Converting text tags to all strings
@@ -73,7 +79,8 @@ class Index(val inputFile: String) {
             newSet.add(m)
             idToLinks(id.text.toInt) = newSet
             addFunWord(id.text.toInt, m, WordstoPage)
-          }
+
+
           //case that link has Presidents|Washington
           else if (m.contains("|")) {
             //populate idtolink
@@ -81,9 +88,11 @@ class Index(val inputFile: String) {
             newSet.add(m) //NEED TO ADD STUFF BEFORE | (how?)
             idToLinks(id.text.toInt) = newSet
             //add word after |
-            val array1 = m.split("|") //how to remove the words after | and |?????
+            val regex1 = m.split("|") //how to remove the words after | and |?????
             //populate add fun word
-            addFunWord(id.text.toInt, array1[1], WordstoPage)
+            addFunWord(id.text.toInt, regex1[1], WordstoPage)
+
+
           }
           //else if category [Category: Computer Science] --> Category: Computer Science
           // category, computer, science --> added to word list
@@ -101,6 +110,25 @@ class Index(val inputFile: String) {
           //        then populate word to freq table
           addFunWord(id.text.toInt, stemWord, WordstoPage)
         }
+
+          //populate idToWords
+          for ((id, newMap) <- idToWords){
+            var currValue = 0
+            for (mapKey <- newMap.keys){
+              if (mapKey == m){
+                currValue += 1
+                mapKey -> currValue
+              } else {
+                currValue += 1
+                newMap.put(m, currValue)
+              }
+            }
+          }
+
+
+
+        }
+
       }
     }
   }
@@ -181,12 +209,94 @@ class Index(val inputFile: String) {
       idToRank.put(id, value)
     }
   }
+
+
+  // Maps the document ids to the title for each document
+  private val idsToTitle = new HashMap[Int, String]
+
+  // Maps the document ids to the euclidean normalization for each document
+  private val idsToMaxFreqs = new HashMap[Int, Double]
+
+  // Maps the document ids to the page rank for each document
+  private val idsToPageRank = new HashMap[Int, Double]
+
+  // Maps each word to a map of document IDs and frequencies of documents that
+  // contain that word
+  private val wordsToDocumentFrequencies =
+  new HashMap[String, HashMap[Int, Double]]
+
+  //Relevance Score tf idf here
+
+  //    Perform some sort of computation (addition/multiplication/etc.)
+  //    combining TD*IDF and the score from PageRank algorithm => output the final score for each page
+  //      (please refer to the roadmap below);
+  //    Word relevance score = TD * IDF; PageRank score (see below to calculate score)
+  //    Recommended to moving to querier
+  //    Multiply PR & tf *idf
+
+  //helper id -> max frequencies
+  private var innerMaxFreq = new HashMap[Int, Int]
+
+  def innerMaxFreq(): Unit = {
+    //Values to be added to WordsToPage
+    var currMax = 0
+    var currWord = ""
+
+    //Calculating Max Frequency
+    for ((id, timesMap) <- idToWords){
+      for ((word, numberTimes) <- timesMap){
+        if (numberTimes > currMax){
+          currMax = numberTimes
+          currWord = word
+        }
+      }
+      innerMaxFreq.put(id, currMax)
+    }
+  }
+
+  //populate given idsToMaxFrequencies
+  def maxFreq(): Unit = { //hashtable of id to title
+    for ((word, innerMap) <- WordstoPage) {
+      for ((innerId, value) <- innerMap) {
+        for ((id, maxFreq) <- innerMaxFreq) {
+          if (innerId == id) {
+            value = maxFreq
+          }
+        }
+      }
+    }
+  }
+
+  def termFrequency(): Double = {
+    // val termMap = maxHashMap(input for term freq)
+    //val c = termMap(word inputted)
+    //val a = termMap.max
+    //return final = c/a
+  }
+
+  def inverseFrequency(): Double = {
+    //val n = total number of documents - count number of ids (keys) in hashtable
+    //val n_j = number of documents that contain term i (word)
+    //for (word in WordsToPage)
+    //size of value (hashmap)
+    //WordsToDocumentFrequencies.put(word, (id, size)
+
+  }
+
+
+
+
+
+
+
+
 }
 
 object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
     //just print ones
+    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage)
     printTitleFile("titles.txt", Index1.idToTitle)
     printWordsFile("words.txt", Index1.WordstoPage)
     System.out.println("Not implemented yet!")
