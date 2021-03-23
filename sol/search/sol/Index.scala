@@ -209,21 +209,7 @@ class Index(val inputFile: String) {
       idToRank.put(id, value)
     }
   }
-
-
-  // Maps the document ids to the title for each document
-  private val idsToTitle = new HashMap[Int, String]
-
-  // Maps the document ids to the euclidean normalization for each document
-  private val idsToMaxFreqs = new HashMap[Int, Double]
-
-  // Maps the document ids to the page rank for each document
-  private val idsToPageRank = new HashMap[Int, Double]
-
-  // Maps each word to a map of document IDs and frequencies of documents that
-  // contain that word
-  private val wordsToDocumentFrequencies =
-  new HashMap[String, HashMap[Int, Double]]
+  
 
   //Relevance Score tf idf here
 
