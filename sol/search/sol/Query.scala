@@ -40,6 +40,29 @@ class Query(titleIndex: String, documentIndex: String, wordIndex: String,
   //    Recommended to moving to querier
   //    Multiply PR & tf *idf
 
+
+  def maxFreq(): HashMap = { //input = document
+    //for word in document
+    // if (newHashMap.contains(word){
+    // word.value ++
+    // else
+    //newHashMap.put( key = word, value = 1)
+    //end for loop
+
+  }
+
+  def termFrequency(): Double ={
+    // val termMap = maxFreq(input for term freq)
+    //val c = termMap(word inputted)
+    //val a = termMap.max
+    //return final = c/a
+
+  }
+
+  def inverseFrequency(): Double = {
+
+  }
+
   def relevanceScore() : Integer = { //how to get the tf idf (from max frequencies?)
     return tf * idf * pageRank // how to call if from the indexer
   }

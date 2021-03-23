@@ -197,8 +197,6 @@ class Index(val inputFile: String) {
       idToRank.put(id, value)
     }
   }
-  
-
 }
 
 object Index {
