@@ -1,19 +1,18 @@
 package search.sol
 
+import search.src.FileIO
+
 import java.io._
-
-import search.src.{FileIO}
-
 import scala.collection.mutable.HashMap
 
 /**
-  * Represents a query REPL built off of a specified index
-  *
-  * @param titleIndex    - the filename of the title index
-  * @param documentIndex - the filename of the document index
-  * @param wordIndex     - the filename of the word index
-  * @param usePageRank   - true if page rank is to be incorporated into scoring
-  */
+ * Represents a query REPL built off of a specified index
+ *
+ * @param titleIndex    - the filename of the title index
+ * @param documentIndex - the filename of the document index
+ * @param wordIndex     - the filename of the word index
+ * @param usePageRank   - true if page rank is to be incorporated into scoring
+ */
 class Query(titleIndex: String,
             documentIndex: String,
             wordIndex: String,
@@ -31,7 +30,7 @@ class Query(titleIndex: String,
   // Maps each word to a map of document IDs and frequencies of documents that
   // contain that word
   private val wordsToDocumentFrequencies =
-    new HashMap[String, HashMap[Int, Double]]
+  new HashMap[String, HashMap[Int, Double]]
 
   //Relevance Score tf idf here
 
@@ -41,57 +40,57 @@ class Query(titleIndex: String,
   //    Word relevance score = TD * IDF; PageRank score (see below to calculate score)
   //    Recommended to moving to querier
   //    Multiply PR & tf *idf
-
-  //helper hashtable
-  def maxHashMap(): HashMap = { //text content each page
-    //for word in document
-    // if (newHashMap.contains(word){
-    // word.value ++
-    // else
-    //newHashMap.put( key = word, value = 1)
-    //end for loop
-
-  }
-
-  //populate given idsToMaxFrequencies
-  def maxFreq(): Unit = { //hashtable of id to title
-    //each id represents each document
-    //for (each id in hashmap)
-    //current documentHashMap = maxHashMap(document)
-    //idstoMaxFrequencies.put(id, documentHashMap.max)
-  }
-
-  def termFrequency(): Double = {
-    // val termMap = maxHashMap(input for term freq)
-    //val c = termMap(word inputted)
-    //val a = termMap.max
-    //return final = c/a
-  }
-
-  def inverseFrequency(): Double = {
-    //val n = total number of documents - count number of ids (keys) in hashtable
-    //val n_j = number of documents that contain term i (word)
-    //for (word in WordsToPage)
-    //size of value (hashmap)
-    //WordsToDocumentFrequencies.put(word, (id, size)
-
-  }
-
-  def relevanceScore()
-    : Integer = { //how to get the tf idf (from max frequencies?)
-
-    //val tf = termFrequency()
-    //val idf = inverseFrequency()
-    //val pageRank = pageRank() -> how do we get page rank from indexer
-    //return tf * idf * pageRank // how to call if from the indexer
-
-  }
+  //
+  //  //helper hashtable
+  //  //  def maxHashMap(): HashMap = { //text content each page
+  //  //    //for word in document
+  //  //    // if (newHashMap.contains(word){
+  //  //    // word.value ++
+  //  //    // else
+  //  //    //newHashMap.put( key = word, value = 1)
+  //  //    //end for loop
+  //  //
+  //  //  }
+  //
+  //  //populate given idsToMaxFrequencies
+  //  def maxFreq(): Unit = { //hashtable of id to title
+  //    //each id represents each document
+  //    //for (each id in hashmap)
+  //    //current documentHashMap = maxHashMap(document)
+  //    //idstoMaxFrequencies.put(id, documentHashMap.max)
+  //  }
+  //
+  //  def termFrequency(): Double = {
+  //    // val termMap = maxHashMap(input for term freq)
+  //    //val c = termMap(word inputted)
+  //    //val a = termMap.max
+  //    //return final = c/a
+  //  }
+  //
+  //  def inverseFrequency(): Double = {
+  //    //val n = total number of documents - count number of ids (keys) in hashtable
+  //    //val n_j = number of documents that contain term i (word)
+  //    //for (word in WordsToPage)
+  //    //size of value (hashmap)
+  //    //WordsToDocumentFrequencies.put(word, (id, size)
+  //
+  //  }
+  //
+  //  def relevanceScore()
+  //  : Integer = { //how to get the tf idf (from max frequencies?)
+  //
+  //    //val tf = termFrequency()
+  //    //val idf = inverseFrequency()
+  //    //val pageRank = pageRank() -> how do we get page rank from indexer
+  //    //return tf * idf * pageRank // how to call if from the indexer
+  //
+  //  }
 
   /**
-    * Handles a single query and prints out results
-    *
-    * @param userQuery - the query text
-    */
+   * Handles a single query and prints out results
+   *
+   * @param userQuery - the query text
+   */
   private def query(userQuery: String) {
     // TODO : Fill this in
     println("Implement query!")
@@ -99,10 +98,10 @@ class Query(titleIndex: String,
   }
 
   /**
-    * Format and print up to 10 results from the results list
-    *
-    * @param results - an array of all results to be printed
-    */
+   * Format and print up to 10 results from the results list
+   *
+   * @param results - an array of all results to be printed
+   */
   private def printResults(results: Array[Int]) {
     for (i <- 0 until Math.min(10, results.size)) {
       println("\t" + (i + 1) + " " + idsToTitle(results(i)))
@@ -119,8 +118,8 @@ class Query(titleIndex: String,
   }
 
   /**
-    * Starts the read and print loop for queries
-    */
+   * Starts the read and print loop for queries
+   */
   def run() {
     val inputReader = new BufferedReader(new InputStreamReader(System.in))
 

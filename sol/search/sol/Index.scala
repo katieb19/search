@@ -18,11 +18,11 @@ import scala.xml.{Node, NodeSeq}
 
 class Index(val inputFile: String) {
   //Hash tables
-  private var WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
-  private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
-  private val idToTitle = new HashMap()[Int, String]
-  private val idToRank = new HashMap()[Int, Double]
-  private val idToWords = new HashMap()[Int, HashMap[String, Int]] //id to [Words, # times it appears]
+  private var WordstoPage = new HashMap[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
+  private val idToLinks = new HashMap[Int, mutable.HashSet[String]] //id to linked pages
+  private val idToTitle = new HashMap[Int, String]
+  private val idToRank = new HashMap[Int, Double]
+  private val idToWords = new HashMap[Int, HashMap[String, Double]] //id to [Words, # times it appears]
   //helper id -> max frequencies
   private val innerMaxFreq = new HashMap[Int, Double] //id -> max freq
 
@@ -47,7 +47,7 @@ class Index(val inputFile: String) {
       //Populate idToTitle
       idToTitle(id.text.toInt) = title.text
       for ((id, title) <- idToTitle) {
-        idToWords.put(id, HashMap.empty[String, Int])
+        idToWords.put(id, HashMap.empty[String, Double])
       }
 
       //Populate WordsToPage
@@ -130,20 +130,20 @@ class Index(val inputFile: String) {
 
   def addFunidToWord(id: Int, wd: String,
                      hM: mutable.HashMap[Int,
-                       mutable.HashMap[String, Int]]): Unit = {
+                       mutable.HashMap[String, Double]]): Unit = {
     //adds a word to a hashmap
     if (!hM(id).contains(wd)) {
       //        then take the stem of said word
       val stemWord = stem(wd)
-      val addHash = new mutable.HashMap()[String, Int]
-      addHash(wd) = 1
-      hM(id) += (addHash)
+      val addHash = new mutable.HashMap[String, Double]
+      addHash(wd) = 1.0
+      hM(id) = addHash
     }
     else {
       //        then take the stem of said word
       val stemWord = stem(wd)
       val currVal = hM(id)(stemWord)
-      hM(id)(stemWord) = currVal + 1
+      hM(id)(stemWord) = currVal + 1.0
     }
   }
 
@@ -154,7 +154,7 @@ class Index(val inputFile: String) {
     if (!hM.contains(wd)) {
       //        then take the stem of said word
       val stemWord = stem(wd)
-      val addHash = new mutable.HashMap()[Int, Double]
+      val addHash = new mutable.HashMap[Int, Double]
       addHash(id) = 1
       hM += (stemWord -> addHash)
     }
@@ -208,9 +208,9 @@ class Index(val inputFile: String) {
 
   def pageRank() { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
     // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
-    var previousR = new mutable.HashMap()[Int, Double]
+    var previousR = new mutable.HashMap[Int, Double]
     //array of n zeros //Hashmap (key: id, value: array)
-    val currentR = new mutable.HashMap()[Int, Double]
+    val currentR = new mutable.HashMap[Int, Double]
     for ((id, _) <- idToTitle) {
       previousR.put(id, 0)
       currentR.put(id, 1 / n)
@@ -241,7 +241,7 @@ class Index(val inputFile: String) {
   //    Multiply PR & tf *idf
 
   def innerMaxFreq2(): Unit = {
-    var currMax = 0
+    var currMax = 0.0
     var currWord = ""
 
     //Calculating Max Frequency
@@ -311,8 +311,8 @@ object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
     //just print ones
-    printDocumentFile("documents.txt", Index1.innerMaxFreq, Index1.idToRank)
-    printTitleFile("titles.txt", Index1.idToTitle)
-    printWordsFile("words.txt", Index1.WordstoPage)
+    printDocumentFile(args(3), Index1.innerMaxFreq, Index1.idToRank)
+    printTitleFile(args(2), Index1.idToTitle)
+    printWordsFile(args(1), Index1.WordstoPage)
   }
 }
