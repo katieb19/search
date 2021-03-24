@@ -1,6 +1,6 @@
 package search.sol
 
-import search.src.FileIO.{printTitleFile, printWordsFile}
+import search.src.FileIO.{printDocumentFile, printTitleFile, printWordsFile}
 import search.src.PorterStemmer.stem
 import search.src.StopWords.isStopWord
 
@@ -18,13 +18,13 @@ import scala.xml.{Node, NodeSeq}
 
 class Index(val inputFile: String) {
   //Hash tables
-  private var WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word -->[int (id) -> max Freq]
+  private var WordstoPage = new HashMap()[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
   private val idToLinks = new HashMap()[Int, mutable.HashSet[String]] //id to linked pages
   private val idToTitle = new HashMap()[Int, String]
   private val idToRank = new HashMap()[Int, Double]
   private val idToWords = new HashMap()[Int, HashMap[String, Int]] //id to [Words, # times it appears]
   //helper id -> max frequencies
-  private var innerMaxFreq = new HashMap[Int, Int] //id -> max freq
+  private val innerMaxFreq = new HashMap[Int, Double] //id -> max freq
 
   val mainNode: Node = xml.XML.loadFile(inputFile)
 
@@ -80,7 +80,8 @@ class Index(val inputFile: String) {
             val matchesList2 =
               matchesIterator2.toList.map { aMatch => aMatch.matched }
             for (m <- matchesList2) {
-              addFunWord(id.text.toInt, m, WordstoPage)
+              addFunidToWord(id.text.toInt, m, idToWords)
+              addFunWordtoPage(id.text.toInt, m, WordstoPage)
               newSet + m
             }
             idToLinks(id.text.toInt).add(newSet)
@@ -94,7 +95,8 @@ class Index(val inputFile: String) {
                 idToLinks(id.text.toInt).add(wd)
               }
               else {
-                addFunWord(id.text.toInt, wd, WordstoPage)
+                addFunidToWord(id.text.toInt, wd, idToWords)
+                addFunWordtoPage(id.text.toInt, m, WordstoPage)
               }
             }
           }
@@ -109,7 +111,8 @@ class Index(val inputFile: String) {
             val matchesList2 =
               matchesIterator2.toList.map { aMatch => aMatch.matched }
             for (m <- matchesList2) {
-              addFunWord(id.text.toInt, m, WordstoPage)
+              addFunidToWord(id.text.toInt, m, idToWords)
+              addFunWordtoPage(id.text.toInt, m, WordstoPage)
               newSet + m
             }
             idToLinks(id.text.toInt).add(newSet)
@@ -118,27 +121,35 @@ class Index(val inputFile: String) {
         // else check if word isnt a stop word
         else if (!isStopWord(m)) {
           //        then populate word to freq table
-          addFunWord(id.text.toInt, m, WordstoPage)
-        }
-
-        //populate idToWords
-        for ((id, newMap) <- idToWords) {
-          var currValue = 0
-          for (mapKey <- newMap.keys) {
-            if (mapKey == m) {
-              currValue += 1
-              mapKey -> currValue
-            } else {
-              currValue += 1
-              newMap.put(m, currValue)
-            }
-          }
+          addFunidToWord(id.text.toInt, m, idToWords)
+          addFunWordtoPage(id.text.toInt, m, WordstoPage)
         }
       }
     }
   }
 
-  def addFunWord(id: Int, wd: String, hM: mutable.HashMap[String, mutable.HashMap[Int, Double]]): Unit = {
+  def addFunidToWord(id: Int, wd: String,
+                     hM: mutable.HashMap[Int,
+                       mutable.HashMap[String, Int]]): Unit = {
+    //adds a word to a hashmap
+    if (!hM(id).contains(wd)) {
+      //        then take the stem of said word
+      val stemWord = stem(wd)
+      val addHash = new mutable.HashMap()[String, Int]
+      addHash(wd) = 1
+      hM(id) += (addHash)
+    }
+    else {
+      //        then take the stem of said word
+      val stemWord = stem(wd)
+      val currVal = hM(id)(stemWord)
+      hM(id)(stemWord) = currVal + 1
+    }
+  }
+
+  def addFunWordtoPage(id: Int, wd: String,
+                       hM: mutable.HashMap[String,
+                         mutable.HashMap[Int, Double]]): Unit = {
     //adds a word to a hashmap
     if (!hM.contains(wd)) {
       //        then take the stem of said word
@@ -150,7 +161,7 @@ class Index(val inputFile: String) {
     else {
       //        then take the stem of said word
       val stemWord = stem(wd)
-      val currVal = hM(wd)(id)
+      val currVal = hM(stemWord)(id)
       hM(stemWord)(id) = currVal + 1
     }
   }
@@ -230,7 +241,6 @@ class Index(val inputFile: String) {
   //    Multiply PR & tf *idf
 
   def innerMaxFreq2(): Unit = {
-    //Values to be added to WordsToPage
     var currMax = 0
     var currWord = ""
 
@@ -242,31 +252,9 @@ class Index(val inputFile: String) {
           currWord = word
         }
       }
-      //innerMaxFreq.put(id, currMax)
-      //@VAL can we just do below
-      //Populate the words to page hashmap
-      for ((word, idToFreq) <- WordstoPage) {
-        for ((id2, freq) <- idToFreq) {
-          if (id == id2) {
-            idToFreq(id) = currMax
-          }
-        }
-      }
+      innerMaxFreq.put(id, currMax)
     }
   }
-
-  //  //populate given idsToMaxFrequencies
-  //  def maxFreq(): Unit = { //hashtable of id to title
-  //    for ((_, innerMap) <- WordstoPage) {
-  //      for ((innerId, value) <- innerMap) {
-  //        for ((id, maxFreq) <- innerMaxFreq) {
-  //          if (innerId == id) {
-  //            value = maxFreq //it is a VAR UGHHHH
-  //          }
-  //        }
-  //      }
-  //    }
-  // }
 
   private val termMap = new HashMap[String, Double]
 
@@ -323,7 +311,7 @@ object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
     //just print ones
-    printDocumentFile("documents.txt", Index1.WordstoPage, Index1.WordstoPage)
+    printDocumentFile("documents.txt", Index1.innerMaxFreq, Index1.idToRank)
     printTitleFile("titles.txt", Index1.idToTitle)
     printWordsFile("words.txt", Index1.WordstoPage)
   }
