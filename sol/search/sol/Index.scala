@@ -11,11 +11,10 @@ import scala.util.matching.Regex
 import scala.xml.{Node, NodeSeq}
 
 /**
- * Provides an XML indexer, produces files for a querier
- *
- * @param inputFile - the filename of the XML wiki to be indexed
- */
-
+  * Provides an XML indexer, produces files for a querier
+  *
+  * @param inputFile - the filename of the XML wiki to be indexed
+  */
 class Index(val inputFile: String) {
   //Hash tables
   private var WordstoPage = new HashMap[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
@@ -25,13 +24,12 @@ class Index(val inputFile: String) {
   private val idToWords = new HashMap[Int, HashMap[String, Double]] //id to [Words, # times it appears]
   //helper id -> max frequencies
   private val innerMaxFreq = new HashMap[Int, Double] //id -> max freq
+  private val idToRelevance = new HashMap[String, HashMap[Int, Double]]
 
   val mainNode: Node = xml.XML.loadFile(inputFile)
 
-
   //Total number of pages
   val n = idToLinks.size
-
 
   def looping(): Unit = {
 
@@ -63,7 +61,9 @@ class Index(val inputFile: String) {
       val matchesIterator = regex.findAllMatchIn(textIdSeq)
 
       // Convert the Iterator to a List and extract the matched substrings
-      val matchesList = matchesIterator.toList.map { aMatch => aMatch.matched }
+      val matchesList = matchesIterator.toList.map { aMatch =>
+        aMatch.matched
+      }
 
       //for loop
       for (m <- matchesList) {
@@ -78,7 +78,9 @@ class Index(val inputFile: String) {
 
             // Convert the Iterator to a List and extract the matched substrings
             val matchesList2 =
-              matchesIterator2.toList.map { aMatch => aMatch.matched }
+              matchesIterator2.toList.map { aMatch =>
+                aMatch.matched
+              }
             for (m <- matchesList2) {
               addFunidToWord(id.text.toInt, m, idToWords)
               addFunWordtoPage(id.text.toInt, m, WordstoPage)
@@ -93,8 +95,7 @@ class Index(val inputFile: String) {
               //if word before the |
               if (splitWord(0).contains(wd)) {
                 idToLinks(id.text.toInt).add(wd)
-              }
-              else {
+              } else {
                 addFunidToWord(id.text.toInt, wd, idToWords)
                 addFunWordtoPage(id.text.toInt, m, WordstoPage)
               }
@@ -109,7 +110,9 @@ class Index(val inputFile: String) {
             val matchesIterator2 = regex3.findAllMatchIn(m)
             //populate idtolink and wordstopage hashmap
             val matchesList2 =
-              matchesIterator2.toList.map { aMatch => aMatch.matched }
+              matchesIterator2.toList.map { aMatch =>
+                aMatch.matched
+              }
             for (m <- matchesList2) {
               addFunidToWord(id.text.toInt, m, idToWords)
               addFunWordtoPage(id.text.toInt, m, WordstoPage)
@@ -128,9 +131,11 @@ class Index(val inputFile: String) {
     }
   }
 
-  def addFunidToWord(id: Int, wd: String,
-                     hM: mutable.HashMap[Int,
-                       mutable.HashMap[String, Double]]): Unit = {
+  def addFunidToWord(
+    id: Int,
+    wd: String,
+    hM: mutable.HashMap[Int, mutable.HashMap[String, Double]]
+  ): Unit = {
     //adds a word to a hashmap
     if (!hM(id).contains(wd)) {
       //        then take the stem of said word
@@ -138,8 +143,7 @@ class Index(val inputFile: String) {
       val addHash = new mutable.HashMap[String, Double]
       addHash(wd) = 1.0
       hM(id) = addHash
-    }
-    else {
+    } else {
       //        then take the stem of said word
       val stemWord = stem(wd)
       val currVal = hM(id)(stemWord)
@@ -147,9 +151,18 @@ class Index(val inputFile: String) {
     }
   }
 
-  def addFunWordtoPage(id: Int, wd: String,
-                       hM: mutable.HashMap[String,
-                         mutable.HashMap[Int, Double]]): Unit = {
+  /**
+    * Provides an XML indexer, produces files for a querier
+    *
+    * @param id - document ID
+    * @param wd - word (String)
+    * @param hM - WordsToPage HashTable
+    */
+  def addFunWordtoPage(
+    id: Int,
+    wd: String,
+    hM: mutable.HashMap[String, mutable.HashMap[Int, Double]]
+  ): Unit = {
     //adds a word to a hashmap
     if (!hM.contains(wd)) {
       //        then take the stem of said word
@@ -157,15 +170,13 @@ class Index(val inputFile: String) {
       val addHash = new mutable.HashMap[Int, Double]
       addHash(id) = 1
       hM += (stemWord -> addHash)
-    }
-    else {
+    } else {
       //        then take the stem of said word
       val stemWord = stem(wd)
       val currVal = hM(stemWord)(id)
       hM(stemWord)(id) = currVal + 1
     }
   }
-
 
   //Calculate weight of page k on page j
   def weight(pageK: Int, pageJ: Int): Double = { // hashMap{key: j_id, value:HashMap{key: k_id, value: Double}}
@@ -188,15 +199,14 @@ class Index(val inputFile: String) {
     //If k links to j
     if (idToLinks.get(pageK).contains(titleJ)) {
       (epsilon / n) + ((1 - epsilon) / unique)
-    }
-    else {
+    } else {
       epsilon / n
     }
   }
 
-
   //Calculate the distance between r and r'
-  def distance(previous: mutable.HashMap[Int, Double], current: mutable.HashMap[Int, Double]): Double = {
+  def distance(previous: mutable.HashMap[Int, Double],
+               current: mutable.HashMap[Int, Double]): Double = {
     val sumDifferences = 0.0
     for (element <- previous.values) {
       for (curr <- current.values) {
@@ -229,7 +239,6 @@ class Index(val inputFile: String) {
       idToRank.put(id, value)
     }
   }
-
 
   //Relevance Score tf idf here
 
@@ -304,6 +313,10 @@ class Index(val inputFile: String) {
     log10(n) / log10(n_i)
   }
 
+  //private val idToRelevance = new HashMap[String, HashMap[Int, Double]]
+  def relevanceScore(iWord: String, jID: Int): Double = {
+    (termFrequency(iWord, jID)) * (inverseFrequency(iWord))
+  }
 
 }
 
