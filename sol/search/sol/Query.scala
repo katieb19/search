@@ -92,6 +92,9 @@ class Query(titleIndex: String,
    * @param userQuery - the query text
    */
   private def query(userQuery: String) {
+    //read in files --> produce hashmaps and use hashmaps to compute tf idf, pagerank
+    //order pages and print out
+    // efficient to do tf idf in query --> page rank in index
     // TODO : Fill this in
     println("Implement query!")
 

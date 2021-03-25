@@ -11,10 +11,10 @@ import scala.util.matching.Regex
 import scala.xml.{Node, NodeSeq}
 
 /**
-  * Provides an XML indexer, produces files for a querier
-  *
-  * @param inputFile - the filename of the XML wiki to be indexed
-  */
+ * Provides an XML indexer, produces files for a querier
+ *
+ * @param inputFile - the filename of the XML wiki to be indexed
+ */
 class Index(val inputFile: String) {
   //Hash tables
   private var WordstoPage = new HashMap[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
@@ -43,7 +43,7 @@ class Index(val inputFile: String) {
       val title: NodeSeq = page \ "title"
 
       //Populate idToTitle
-      idToTitle(id.text.toInt) = title.text
+      idToTitle(id.text.trim.toInt) = title.text
       for ((id, title) <- idToTitle) {
         idToWords.put(id, HashMap.empty[String, Double])
       }
@@ -82,11 +82,11 @@ class Index(val inputFile: String) {
                 aMatch.matched
               }
             for (m <- matchesList2) {
-              addFunidToWord(id.text.toInt, m, idToWords)
-              addFunWordtoPage(id.text.toInt, m, WordstoPage)
+              addFunidToWord(id.text.trim.toInt, m, idToWords)
+              addFunWordtoPage(id.text.trim.toInt, m, WordstoPage)
               newSet + m
             }
-            idToLinks(id.text.toInt).add(newSet)
+            idToLinks(id.text.trim.toInt).add(newSet)
           }
           //case that link has Presidents|Washington
           else if (m.contains("|")) {
@@ -96,8 +96,8 @@ class Index(val inputFile: String) {
               if (splitWord(0).contains(wd)) {
                 idToLinks(id.text.toInt).add(wd)
               } else {
-                addFunidToWord(id.text.toInt, wd, idToWords)
-                addFunWordtoPage(id.text.toInt, m, WordstoPage)
+                addFunidToWord(id.text.trim.toInt, wd, idToWords)
+                addFunWordtoPage(id.text.trim.toInt, m, WordstoPage)
               }
             }
           }
@@ -114,28 +114,29 @@ class Index(val inputFile: String) {
                 aMatch.matched
               }
             for (m <- matchesList2) {
-              addFunidToWord(id.text.toInt, m, idToWords)
-              addFunWordtoPage(id.text.toInt, m, WordstoPage)
+              addFunidToWord(id.text.trim.toInt, m, idToWords)
+              addFunWordtoPage(id.text.trim.toInt, m, WordstoPage)
               newSet + m
             }
-            idToLinks(id.text.toInt).add(newSet)
+            idToLinks(id.text.trim.toInt).add(newSet)
           }
         }
         // else check if word isnt a stop word
         else if (!isStopWord(m)) {
           //        then populate word to freq table
-          addFunidToWord(id.text.toInt, m, idToWords)
-          addFunWordtoPage(id.text.toInt, m, WordstoPage)
+          addFunidToWord(id.text.trim.toInt, m, idToWords)
+          addFunWordtoPage(id.text.trim.toInt, m, WordstoPage)
         }
       }
     }
   }
 
+
   def addFunidToWord(
-    id: Int,
-    wd: String,
-    hM: mutable.HashMap[Int, mutable.HashMap[String, Double]]
-  ): Unit = {
+                      id: Int,
+                      wd: String,
+                      hM: mutable.HashMap[Int, mutable.HashMap[String, Double]]
+                    ): Unit = {
     //adds a word to a hashmap
     if (!hM(id).contains(wd)) {
       //        then take the stem of said word
@@ -152,17 +153,17 @@ class Index(val inputFile: String) {
   }
 
   /**
-    * Provides an XML indexer, produces files for a querier
-    *
-    * @param id - document ID
-    * @param wd - word (String)
-    * @param hM - WordsToPage HashTable
-    */
+   * Provides an XML indexer, produces files for a querier
+   *
+   * @param id - document ID
+   * @param wd - word (String)
+   * @param hM - WordsToPage HashTable
+   */
   def addFunWordtoPage(
-    id: Int,
-    wd: String,
-    hM: mutable.HashMap[String, mutable.HashMap[Int, Double]]
-  ): Unit = {
+                        id: Int,
+                        wd: String,
+                        hM: mutable.HashMap[String, mutable.HashMap[Int, Double]]
+                      ): Unit = {
     //adds a word to a hashmap
     if (!hM.contains(wd)) {
       //        then take the stem of said word
@@ -217,6 +218,7 @@ class Index(val inputFile: String) {
   }
 
   def pageRank() { //Function pageRank → output: HashMap IdToRank{ key: id, value: Double}
+    val n = idToTitle.size
     // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
     var previousR = new mutable.HashMap[Int, Double]
     //array of n zeros //Hashmap (key: id, value: array)
@@ -318,14 +320,19 @@ class Index(val inputFile: String) {
     (termFrequency(iWord, jID)) * (inverseFrequency(iWord))
   }
 
+  looping()
+  pageRank()
 }
 
 object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
+    println(Index1.idToRank)
+    println(Index1.WordstoPage)
+    println(Index1.idToWords)
     //just print ones
-    printDocumentFile(args(3), Index1.innerMaxFreq, Index1.idToRank)
-    printTitleFile(args(2), Index1.idToTitle)
-    printWordsFile(args(1), Index1.WordstoPage)
+    printDocumentFile(args(2), Index1.innerMaxFreq, Index1.idToRank)
+    printTitleFile(args(1), Index1.idToTitle)
+    printWordsFile(args(3), Index1.WordstoPage)
   }
 }
