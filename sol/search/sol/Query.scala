@@ -1,8 +1,11 @@
 package search.sol
 
 import search.src.FileIO
+import search.src.PorterStemmer.stem
+import search.src.StopWords.isStopWord
 
 import java.io._
+import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.math.log10
 
@@ -41,7 +44,7 @@ class Query(titleIndex: String,
    * @param userQuery - the query text
    */
   private def query(userQuery: String) {
-    readFiles()
+    readFiles(titleIndex, documentIndex, wordIndex)
     // parse arguments --> whether or not using page rank and the
     //read in files --> produce hashmaps and use hashmaps to compute tf idf, pagerank
     //order pages and print out
@@ -49,6 +52,46 @@ class Query(titleIndex: String,
     // TODO : Fill this in
     println("Implement query!")
 
+  }
+
+  def withoutPageRank(query: String): Unit = {
+    val stringSplit = query.split(" ")
+    var nonStopWords = new mutable.HashSet[String]()
+    for (word <- stringSplit) {
+      if (!isStopWord(word)) {
+        nonStopWords += stem(word)
+      }
+    }
+
+    //Storing ids to scores
+    var idsToScores = new mutable.HashMap[Int, Double]
+
+    //looping through all non-stop stemmed words in query
+    for ((id, title) <- idsToTitle) {
+      var sumCombinedScores = 0
+      for ((mapWord, hash) <- wordsToDocumentFrequencies) {
+        for ((innerId, _) <- hash) {
+          if (id == innerId) {
+            
+
+            idsToScores.put(id,)
+          }
+        }
+      }
+
+    }
+
+
+    for (word <- nonStopWords) {
+      for ((mapWord, hash) <- wordsToDocumentFrequencies) {
+        if (word == mapWord) {
+          for ((id, _) <- hash) {
+            sumCombinedScores +=
+              (termFrequency(word, id) * inverseFrequency(word))
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -211,7 +254,7 @@ object Query {
       }
       val query: Query =
         new Query(args(titleIndex), args(docIndex), args(wordIndex), pageRank)
-      query.readFiles()
+      //query.readFiles(args[1], args[2], args[3])//what?!
       query.run()
     } catch {
       case _: FileNotFoundException =>

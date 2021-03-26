@@ -25,15 +25,16 @@ class Index(val inputFile: String) {
   //Local Helper HashTables
   private val innerMaxFreq = new HashMap[Int, Double] //id -> max freq
 
+  //Converts xml file to nodes
   val mainNode: Node = xml.XML.loadFile(inputFile)
+
+  //to access all pages
+  val pageSeg: NodeSeq = mainNode \ "page"
 
   //Total number of pages
   val n = idToLinks.size
 
   def looping(): Unit = {
-
-    //to access all pages
-    val pageSeg: NodeSeq = mainNode \ "page"
 
     for (page <- pageSeg) {
 
