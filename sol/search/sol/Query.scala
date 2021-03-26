@@ -4,6 +4,7 @@ import search.src.FileIO
 
 import java.io._
 import scala.collection.mutable.HashMap
+import scala.math.log10
 
 /**
  * Represents a query REPL built off of a specified index
@@ -29,62 +30,10 @@ class Query(titleIndex: String,
 
   // Maps each word to a map of document IDs and frequencies of documents that
   // contain that word
-  private val wordsToDocumentFrequencies =
-  new HashMap[String, HashMap[Int, Double]]
+  private val wordsToDocumentFrequencies = {
+    new HashMap[String, HashMap[Int, Double]]
+  }
 
-  //Relevance Score tf idf here
-
-  //    Perform some sort of computation (addition/multiplication/etc.)
-  //    combining TD*IDF and the score from PageRank algorithm => output the final score for each page
-  //      (please refer to the roadmap below);
-  //    Word relevance score = TD * IDF; PageRank score (see below to calculate score)
-  //    Recommended to moving to querier
-  //    Multiply PR & tf *idf
-  //
-  //  //helper hashtable
-  //  //  def maxHashMap(): HashMap = { //text content each page
-  //  //    //for word in document
-  //  //    // if (newHashMap.contains(word){
-  //  //    // word.value ++
-  //  //    // else
-  //  //    //newHashMap.put( key = word, value = 1)
-  //  //    //end for loop
-  //  //
-  //  //  }
-  //
-  //  //populate given idsToMaxFrequencies
-  //  def maxFreq(): Unit = { //hashtable of id to title
-  //    //each id represents each document
-  //    //for (each id in hashmap)
-  //    //current documentHashMap = maxHashMap(document)
-  //    //idstoMaxFrequencies.put(id, documentHashMap.max)
-  //  }
-  //
-  //  def termFrequency(): Double = {
-  //    // val termMap = maxHashMap(input for term freq)
-  //    //val c = termMap(word inputted)
-  //    //val a = termMap.max
-  //    //return final = c/a
-  //  }
-  //
-  //  def inverseFrequency(): Double = {
-  //    //val n = total number of documents - count number of ids (keys) in hashtable
-  //    //val n_j = number of documents that contain term i (word)
-  //    //for (word in WordsToPage)
-  //    //size of value (hashmap)
-  //    //WordsToDocumentFrequencies.put(word, (id, size)
-  //
-  //  }
-  //
-  //  def relevanceScore()
-  //  : Integer = { //how to get the tf idf (from max frequencies?)
-  //
-  //    //val tf = termFrequency()
-  //    //val idf = inverseFrequency()
-  //    //val pageRank = pageRank() -> how do we get page rank from indexer
-  //    //return tf * idf * pageRank // how to call if from the indexer
-  //
-  //  }
 
   /**
    * Handles a single query and prints out results
@@ -92,6 +41,8 @@ class Query(titleIndex: String,
    * @param userQuery - the query text
    */
   private def query(userQuery: String) {
+    readFiles()
+    // parse arguments --> whether or not using page rank and the
     //read in files --> produce hashmaps and use hashmaps to compute tf idf, pagerank
     //order pages and print out
     // efficient to do tf idf in query --> page rank in index
@@ -111,13 +62,101 @@ class Query(titleIndex: String,
     }
   }
 
-  /*
+  /**
    * Reads in the text files.
    */
-  def readFiles(): Unit = {
+  def readFiles(titleIndex: String, documentIndex: String, wordIndex: String): Unit = {
     FileIO.readTitles(titleIndex, idsToTitle)
     FileIO.readDocuments(documentIndex, idsToMaxFreqs, idsToPageRank)
     FileIO.readWords(wordIndex, wordsToDocumentFrequencies)
+  }
+
+  //Populates idsToMaxFreqs
+  def innerMaxFreq2(): Unit = {
+    //Track Variables
+    var currMax = 0.0
+
+    //Calculating Max Frequency
+    for ((_, timesMap) <- wordsToDocumentFrequencies) {
+      for ((id, totalTimes) <- timesMap) {
+        if (totalTimes > currMax) {
+          currMax = totalTimes
+        }
+        idsToMaxFreqs.put(id, currMax)
+      }
+    }
+  }
+
+  /**
+   * Calculates the tf
+   *
+   * @param i : String representing word
+   * @param j : Int representing document ID
+   * @return tf
+   */
+  def termFrequency(i: String, j: Int): Double = {
+
+    var c = 0.0
+    var a = 0.0
+
+    for ((id, totalTimes) <- idsToMaxFreqs) {
+      if (j == id) {
+        c = totalTimes
+      }
+    }
+
+    for ((word, newMap) <- wordsToDocumentFrequencies) {
+      if (i == word) {
+        for ((_, maxFreq) <- newMap) {
+          a = maxFreq
+        }
+      }
+    }
+    c / a
+  }
+
+  /**
+   * Calculates the tf
+   *
+   * @param i : String representing word
+   * @return idf
+   */
+  def inverseFrequency(i: String): Double = {
+
+    //total # of documents
+    val n = idsToTitle.size.toDouble
+
+    // number of docs that contain term i
+    var n_i = 0.0
+
+    // run through list and add one to get amount of docs w term i
+    for ((word, map) <- wordsToDocumentFrequencies) {
+      if (i.equals(word)) {
+        for (innerMap <- map) {
+          n_i += 1.0
+        }
+      }
+    }
+
+    //Return idf
+    log10(n) / log10(n_i)
+  }
+
+  /**
+   * Calculates the relevance score given a word and a document id
+   *
+   * @param iWord : String representing word
+   * @param jID   : Int representing document id
+   * @return relevance score
+   */
+  def relevanceScore(iWord: String, jID: Int): Double = {
+    var score = (termFrequency(iWord, jID)) * (inverseFrequency(iWord))
+    for ((id, rank) <- idsToPageRank) {
+      if (id == jID) {
+        score *= rank
+      }
+    }
+    score
   }
 
   /**

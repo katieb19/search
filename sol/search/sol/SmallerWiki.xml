@@ -10,4 +10,15 @@
             Here is a dog yay
         </text>
     </page>
+    <page>
+        <title>
+            Hedgehog
+        </title>
+        <id>
+            1
+        </id>
+        <text>
+            Here is a dog yay
+        </text>
+    </page>
 </xml>
