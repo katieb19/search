@@ -193,6 +193,9 @@ class Index(val inputFile: String) {
     //Total number of unique pages that k links to
     val unique = idToLinks.get(kID).size
 
+    //Size idToTitle
+    val n = idToTitle.size
+
     //If page doesn't link to anything
     if (unique == 0) {
       for ((id, array) <- idToLinks) {
@@ -311,6 +314,7 @@ object Index {
     println(Index1.idToRank)
     Index1.pageRank()
     Index1.looping()
+    Index1.innerMaxFreq2()
     println(Index1.WordstoPage)
     println(Index1.innerMaxFreq)
 
