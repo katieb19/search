@@ -288,18 +288,46 @@ class Index(val inputFile: String) {
    */
   //Populates idsToMaxFreqs
   def innerMaxFreq2(): Unit = {
-    //Track Variables
-    var currMax = 0.0
 
-    //Calculating Max Frequency
-    for ((_, timesMap) <- WordstoPage) {
-      for ((id, totalTimes) <- timesMap) {
-        if (totalTimes > currMax) {
-          currMax = totalTimes
+    //new hashmap w key: id, val: map(key: word, val: freq)
+    val innerMap = new HashMap[String, Double]
+    val idToWordFreq = new HashMap[Integer, HashMap[String, Double]]
+    //populate inner hash map
+    for ((id, _) <- idToTitle) {
+      for ((wd, timesMap) <- WordstoPage) {
+        for ((id2, totalTimes) <- timesMap) {
+          if (id2 == id) {
+            innerMap(wd) = totalTimes
+          }
         }
-        innerMaxFreq.put(id, currMax)
       }
+      idToWordFreq(id) = innerMap
     }
+
+    // get max freq and populate innerMax Freq
+    for ((id, inside) <- idToWordFreq) {
+      //Track Variables
+      var currMax = 0.0
+      for ((wd, freq) <- inside) {
+        if (freq > currMax) {
+          currMax = freq
+        }
+      }
+      innerMaxFreq(id) = currMax
+    }
+    //    //Calculating Max Frequency
+    //    for ((id, _) <- idToTitle) {
+    //      for ((_, timesMap) <- WordstoPage) {
+    //        for ((id2, totalTimes) <- timesMap) {
+    //          if (id2 == id) {
+    //            if (totalTimes > currMax) {
+    //              currMax = totalTimes
+    //            }
+    //          }
+    //        }
+    //      }
+    //      innerMaxFreq.put(id, currMax)
+    //    }
   }
 
   //Calling methods
