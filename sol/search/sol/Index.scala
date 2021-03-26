@@ -210,9 +210,9 @@ class Index(val inputFile: String) {
 
     //If k links to j
     if (idToLinks.get(kID).contains(titleJ)) {
-      (epsilon / n) + ((1 - epsilon) / unique)
+      (epsilon / n.toDouble) + ((1 - epsilon) / unique)
     } else {
-      epsilon / n
+      epsilon / n.toDouble
     }
   }
 
@@ -227,6 +227,9 @@ class Index(val inputFile: String) {
   def distance(previous: mutable.HashMap[Int, Double],
                current: mutable.HashMap[Int, Double]): Double = {
     var sumDifferences = 0.0
+    //    for (k <- 0 until previous.size) {
+    //      sumDifferences += scala.math.pow(curr - element, 2)
+    //    }
     for (element <- previous.values) {
       for (curr <- current.values) {
         sumDifferences += scala.math.pow(curr - element, 2)
@@ -255,19 +258,19 @@ class Index(val inputFile: String) {
 
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
-      for ((currID, _) <- currentR) {
-        currentR(currID) = 0.0
-        for ((prevID, _) <- previousR) {
-          currentR(currID) = currentR(currID) + (weight(currID, prevID) * previousR(prevID))
-        }
-      }
-
-      //      for (j <- 0 until n) {
-      //        currentR(j) = 0
-      //        for (k <- 0 until n) {
-      //          currentR(j) = currentR(j) + (weight(j, k) * previousR(k))
+      //      for ((currID, _) <- currentR) {
+      //        currentR(currID) = 0.0
+      //        for ((prevID, _) <- previousR) {
+      //          currentR(currID) = currentR(currID) + (weight(currID, prevID) * previousR(prevID))
       //        }
       //      }
+
+      for (j <- 0 until n) {
+        currentR(j) = 0.0
+        for (k <- 0 until n) {
+          currentR(j) = currentR(j) + (weight(j, k) * previousR(k))
+        }
+      }
     }
 
     //Populate idToRank
