@@ -83,7 +83,7 @@ class Index(val inputFile: String) {
                 aMatch.matched
               }
             for (m <- matchesList2) {
-              addFunWordtoPage(trimId, m, WordstoPage)
+              addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
               newSet += m
             }
             if (idToLinks.contains(trimId)) {
@@ -105,30 +105,40 @@ class Index(val inputFile: String) {
                   idToLinks(trimId) + wd
                 }
                 else {
-                  idToLinks(trimId) = new mutable.HashSet[String]() + wd
+                  val set2 = new mutable.HashSet[String]()
+                  idToLinks(trimId) = set2 + wd
                 }
               }
               else if (wd != splitWord(0)) {
-                addFunWordtoPage(trimId, wd, WordstoPage)
+                val regex3 = new Regex("([A-Z])\\w+")
+                val matchesIterator2 = regex3.findAllMatchIn(wd)
+                val matchesList2 =
+                  matchesIterator2.toList.map { aMatch =>
+                    aMatch.matched
+                  }
+                for (wd2 <- matchesList2) {
+                  addFunWordtoPage(trimId, wd2.toLowerCase(), WordstoPage)
+                }
               }
             }
           }
 
-          //else if category [Category: Computer Science] --> Category: Computer Science
+          //else if category [Category: Computer Science] -->
+          // Category: Computer Science
           // category, computer, science --> added to word list
           else {
             //regex to take out square brackets and isolate word
             //take out square brackets
             val subString = m.substring(2, m.length - 2)
+            //populate idtolink and wordstopage hashmap
             val regex3 = new Regex("([A-Z])\\w+")
             val matchesIterator2 = regex3.findAllMatchIn(m)
-            //populate idtolink and wordstopage hashmap
             val matchesList2 =
               matchesIterator2.toList.map { aMatch =>
                 aMatch.matched
               }
             for (m <- matchesList2) {
-              addFunWordtoPage(trimId, m, WordstoPage)
+              addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
             }
             if (idToLinks.contains(trimId)) {
               idToLinks(trimId) + subString
@@ -142,7 +152,7 @@ class Index(val inputFile: String) {
         // else check if word isnt a stop word
         else if (!isStopWord(m)) {
           //Populate word to freq table
-          addFunWordtoPage(trimId, m, WordstoPage)
+          addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
         }
       }
     }
@@ -161,7 +171,6 @@ class Index(val inputFile: String) {
                         wordPageHelper:
                         mutable.HashMap[String, mutable.HashMap[Int, Double]]
                       ): Unit = {
-
     val stemWord = stem(word).toLowerCase()
     //adds a word to a hashmap
     if (!wordPageHelper.contains(stemWord)) {
@@ -190,7 +199,8 @@ class Index(val inputFile: String) {
   }
 
   /**
-   * Helper to get title from id
+   * Helper to get title from id since idToTitles.get(id) returns
+   * Option[String] rather than String
    *
    * @param id : given document id
    * @return title corresponding to that id
@@ -213,6 +223,7 @@ class Index(val inputFile: String) {
    * @return a double representing the square root of the sum of differences
    */
   def weight(kID: Int, jID: Int): Double = {
+    //questions? : do we need to calculate j->k as well
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(kID).size
@@ -230,7 +241,7 @@ class Index(val inputFile: String) {
     }
 
     //get title of j
-    val titleJ = idToTitle.get(jID)
+    val titleJ = getTitle(jID)
 
     //Epsilon
     val epsilon = 0.15
@@ -238,6 +249,7 @@ class Index(val inputFile: String) {
     //If k links to j
     if (idToLinks.get(kID).contains(titleJ)) {
       (epsilon / n.toDouble) + ((1 - epsilon) / unique)
+
     } else {
       epsilon / n.toDouble
     }
@@ -250,7 +262,6 @@ class Index(val inputFile: String) {
    * @param current  : HashMap
    * @return a double representing the square root of the sum of differences
    */
-
   def distance(previous: mutable.HashMap[Int, Double],
                current: mutable.HashMap[Int, Double]): Double = {
     var sumDifferences = 0.0
@@ -266,9 +277,8 @@ class Index(val inputFile: String) {
    * Calculates the authority (pageRank) for each document, populating idToRank
    */
   def pageRank(): Unit = {
-
-    //Size idToTitle
-    val n = idToTitle.size
+    //Arbitrary number
+    val n = 50
 
     // hashmap --> key is page; val is a hashtable (key: page, value: weight))
     var previousR = new mutable.HashMap[Int, Double]
@@ -280,13 +290,18 @@ class Index(val inputFile: String) {
       currentR.put(id, 1 / n.toDouble)
     }
 
+    //Calculates distance and weights
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
 
-      for (j <- 0 until n) {
-        currentR(j) = 0.0
-        for (k <- 0 until n) {
-          currentR(j) = currentR(j) + (weight(j, k) * previousR(k))
+      for (j <- 0 until idToTitle.size) {
+        if (idToTitle.contains(j)) {
+          currentR(j) = 0.0
+        }
+        for (k <- 0 until idToTitle.size) {
+          if (idToTitle.contains(k)) {
+            currentR(j) += (weight(j, k) * previousR(k))
+          }
         }
       }
     }
@@ -298,15 +313,16 @@ class Index(val inputFile: String) {
   }
 
   /**
-   * Calculates the max Frequency of each word in a document and populates the inner Max Freq helper
-   * The Inner Max Freq helper is the value of WordsToPage Hashmap
+   * Calculates the max Frequency of each word in a document and populates
+   * the inner Max Freq helper
+   * The Inner Max Freq helper is the value of WordsToPage Hashmap with words
+   * as keys and frequencies as values
    */
-  //Populates idsToMaxFreqs
   def innerMaxFreq2(): Unit = {
 
-    //new hashmap w key: id, val: map(key: word, val: freq)
     val innerMap = new HashMap[String, Double]
     val idToWordFreq = new HashMap[Integer, HashMap[String, Double]]
+
     //populate inner hash map
     for ((id, _) <- idToTitle) {
       for ((wd, timesMap) <- WordstoPage) {
@@ -321,6 +337,7 @@ class Index(val inputFile: String) {
 
     //Track Variables
     var currMax = 0.0
+
     // get max freq and populate innerMax Freq
     for ((id, inside) <- idToWordFreq) {
       for ((wd, freq) <- inside) {

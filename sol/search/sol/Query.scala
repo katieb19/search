@@ -43,18 +43,17 @@ class Query(titleIndex: String,
    * @param userQuery - the query text
    */
   private def query(userQuery: String) {
-    //readFiles(titleIndex, documentIndex, wordIndex)
     if (usePageRank) {
-      withPageRank(userQuery)
+      withPageRank(userQuery.toLowerCase())
     }
-    withoutPageRank(userQuery)
-
-    // parse arguments --> whether or not using page rank and the
-    //read in files --> produce hashmaps and use hashmaps to compute tf idf, pagerank
-    //order pages and print out
-    // efficient to do tf idf in query --> page rank in index
+    withoutPageRank(userQuery.toLowerCase())
   }
 
+  /**
+   * Calculates the score of the query without Page Rank
+   *
+   * @param query - takes in a user input
+   */
   def withoutPageRank(query: String): Unit = {
 
     //Regex
@@ -73,59 +72,37 @@ class Query(titleIndex: String,
     //Storing ids to scores
     var idsToScores = new mutable.HashMap[Int, Double]
 
-    //looping through all non-stop stemmed words in query
-    for ((id, title) <- idsToTitle) {
-
-      //Holding combined score for current Id
-      var sumCombinedScores: Double = 0.0
-
-      //Loop through words
-      for ((mapWord, hash) <- wordsToDocumentFrequencies) {
-        for ((innerId, _) <- hash) {
-          if (id == innerId) {
-            sumCombinedScores +=
-              (termFrequency(mapWord, id) * inverseFrequency(mapWord))
-          }
-        }
+    //Populating IdsToScores
+    for (wd <- nonStopWords) {
+      val inner = wordsToDocumentFrequencies(wd)
+      for ((id, freq) <- inner) {
+        val sumMax = termFrequency(wd, id) * inverseFrequency(wd)
+        idsToScores.put(id, sumMax)
       }
-
-      //Populate idsToScores
-      idsToScores.put(id, sumCombinedScores)
     }
 
-    val mapToTuples = idsToScores.toList
-    val sortedList =
+    //Converting to Array and Sorting
+    val mapToTuples = idsToScores.toArray
+    val sortedArray =
       mapToTuples.sortWith((first, second) => first._2 > second._2)
 
-    val sortedIdsToScores = new HashMap[Int, Double]
-    for (pair <- sortedList) {
-      sortedIdsToScores.put(pair._1, pair._2)
+    //Populates Array to be printed
+    val n = sortedArray.size
+    val funArray = new Array[Int](n)
+    var index = 0
+    for (key <- sortedArray) {
+      funArray(index) = key._1
+      index += 1
     }
 
-    //idsToScores sorted from high to low
-    //val sortedIdsToScores = List(idsToScores.toSeq.sortWith(_._2 > _._2): _*)
-
-    //Ten highest-scored documents: Id and Title
-    val topTen = new HashMap[Int, String]
-
-    //Populating topTen
-    for (idt <- sortedIdsToScores) {
-      val (id, _) = idt
-      var i = 0
-      while (i <= 9) {
-        for ((titleId, title) <- idsToTitle) {
-          if (id == titleId) {
-            topTen.put(id, title)
-          }
-          i += 1
-        }
-      }
-    }
-
-    //HashMap with top ten ids
-    println(topTen)
+    printResults(funArray)
   }
 
+  /**
+   * Calculates the score of the query with Page Rank
+   *
+   * @param query - takes in a user input
+   */
   def withPageRank(query: String): Unit = {
     //Regex
     val stringSplit = query.split(" ")
@@ -143,60 +120,30 @@ class Query(titleIndex: String,
     //Storing ids to scores
     var idsToScores = new mutable.HashMap[Int, Double]
 
-    //looping through all non-stop stemmed words in query
-    for ((id, title) <- idsToTitle) {
-
-      //Holding combined score for current Id
-      var sumCombinedScores = 0.0
-
-      //Loop through words
-      for ((mapWord, hash) <- wordsToDocumentFrequencies) {
-        for ((innerId, _) <- hash) {
-          if (id == innerId) {
-            sumCombinedScores +=
-              relevanceScore(mapWord, id)
-          }
-        }
+    //Populating IdsToScores
+    for (wd <- nonStopWords) {
+      val inner = wordsToDocumentFrequencies(wd)
+      for ((id, freq) <- inner) {
+        val sumMax = relevanceScore(wd, id)
+        idsToScores.put(id, idsToScores(id) + sumMax)
       }
-
-      //Populate idsToScores
-      idsToScores.put(id, sumCombinedScores)
     }
 
-    val mapToTuples = idsToScores.toList
-    val sortedList =
+    //Converting to Array and Sorting
+    val mapToTuples = idsToScores.toArray
+    val sortedArray =
       mapToTuples.sortWith((first, second) => first._2 > second._2)
 
-    val sortedIdsToScores = new HashMap[Int, Double]
-    for (pair <- sortedList) {
-      sortedIdsToScores.put(pair._1, pair._2)
+    //Populates Array to be printed
+    val n = sortedArray.size
+    val funArray = new Array[Int](n)
+    var index = 0
+    for (key <- sortedArray) {
+      funArray(index) = key._1
+      index += 1
     }
 
-    //    //idsToScores sorted from high to low
-    //    val sortedIdsToScoresSeq = idsToScores.toSeq.sortWith(_._2 > _._2): _*
-    //    //val sortedIdsToScores = new HashMap[Int, Double]
-    //    for (element <- sortedIdsToScoresSeq){
-    //      sortedIdsToScores.put(element)
-    //    }
-
-    //Ten highest-scored documents: Id and Title
-    val topTen = new HashMap[Int, String]
-
-    //Populating topTen
-    for ((id, _) <- sortedIdsToScores) {
-      var i = 0
-      while (i <= 9) {
-        for ((titleId, title) <- idsToTitle) {
-          if (id == titleId) {
-            topTen.put(id, title)
-          }
-          i += 1
-        }
-      }
-    }
-
-    //HashMap with top ten ids
-    println(topTen)
+    printResults(funArray)
   }
 
   /**
@@ -219,22 +166,6 @@ class Query(titleIndex: String,
     FileIO.readWords(wordIndex, wordsToDocumentFrequencies)
   }
 
-  //Populates idsToMaxFreqs
-  def innerMaxFreq2(): Unit = {
-    //Track Variables
-    var currMax = 0.0
-
-    //Calculating Max Frequency
-    for ((_, timesMap) <- wordsToDocumentFrequencies) {
-      for ((id, totalTimes) <- timesMap) {
-        if (totalTimes > currMax) {
-          currMax = totalTimes
-        }
-        idsToMaxFreqs.put(id, currMax)
-      }
-    }
-  }
-
   /**
    * Calculates the tf
    *
@@ -244,15 +175,18 @@ class Query(titleIndex: String,
    */
   def termFrequency(i: String, j: Int): Double = {
 
+    //Variables
     var c = 0.0
     var a = 0.0
 
+    //Calculating c
     for ((id, totalTimes) <- idsToMaxFreqs) {
       if (j == id) {
         c = totalTimes
       }
     }
 
+    //Calculating a
     for ((word, newMap) <- wordsToDocumentFrequencies) {
       if (i == word) {
         for ((_, maxFreq) <- newMap) {
@@ -260,6 +194,8 @@ class Query(titleIndex: String,
         }
       }
     }
+
+    //Term Frequency
     c / a
   }
 
@@ -299,6 +235,7 @@ class Query(titleIndex: String,
    */
   def relevanceScore(iWord: String, jID: Int): Double = {
     var score = (termFrequency(iWord, jID)) * (inverseFrequency(iWord))
+
     for ((id, rank) <- idsToPageRank) {
       if (id == jID) {
         score *= rank
