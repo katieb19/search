@@ -160,7 +160,7 @@ class Index(val inputFile: String) {
                         wordPageHelper: mutable.HashMap[String, mutable.HashMap[Int, Double]]
                       ): Unit = {
 
-    val stemWord = stem(word)
+    val stemWord = stem(word).toLowerCase()
     //adds a word to a hashmap
     if (!wordPageHelper.contains(stemWord)) {
       //create new entry in hashmap wordpagehelper
