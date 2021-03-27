@@ -21,8 +21,6 @@ class Index(val inputFile: String) {
   private val idToLinks = new HashMap[Int, mutable.HashSet[String]]
   private val idToTitle = new HashMap[Int, String]
   private val idToRank = new HashMap[Int, Double]
-
-  //Local Helper HashTables
   private val innerMaxFreq = new HashMap[Int, Double] //id -> max freq
 
   //Converts xml file to nodes
@@ -32,7 +30,8 @@ class Index(val inputFile: String) {
   val pageSeg: NodeSeq = mainNode \ "page"
 
   //Total number of pages
-  val n = idToLinks.size
+  val n: Int = idToLinks.size
+
 
   def looping(): Unit = {
 
@@ -64,17 +63,20 @@ class Index(val inputFile: String) {
         aMatch.matched
       }
 
+      //empty string to populate if there is a link
+      var newSet = new String
+
+      //take out square brackets
+      val regex2 = new Regex("([A-Z])\\w+")
+
       //for loop
       for (m <- matchesList) {
         // if m is a link (regex)
         if (m.matches("\\[\\[[^\\[]+?\\]\\]")) {
           //case that link doesnt have category or |
           if (!m.contains("|") && !m.contains("Category:")) {
-            var newSet = new String
             //take out square brackets
-            val regex2 = new Regex("([A-Z])\\w+")
             val matchesIterator2 = regex2.findAllMatchIn(m)
-
             // Convert the Iterator to a List and extract the matched substrings
             val matchesList2 =
               matchesIterator2.toList.map { aMatch =>
@@ -317,10 +319,10 @@ class Index(val inputFile: String) {
       idToWordFreq(id) = innerMap
     }
 
+    //Track Variables
+    var currMax = 0.0
     // get max freq and populate innerMax Freq
     for ((id, inside) <- idToWordFreq) {
-      //Track Variables
-      var currMax = 0.0
       for ((wd, freq) <- inside) {
         if (freq > currMax) {
           currMax = freq
