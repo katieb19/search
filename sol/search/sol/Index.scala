@@ -17,8 +17,8 @@ import scala.xml.{Node, NodeSeq}
 class Index(val inputFile: String) {
 
   //HashTables to be read in Query
-  private var WordstoPage = new HashMap[String, HashMap[Int, Double]] //string word -->[int (id) -> how often word appears]
-  private val idToLinks = new HashMap[Int, mutable.HashSet[String]] //id to linked pages
+  private val WordstoPage = new HashMap[String, HashMap[Int, Double]]
+  private val idToLinks = new HashMap[Int, mutable.HashSet[String]]
   private val idToTitle = new HashMap[Int, String]
   private val idToRank = new HashMap[Int, Double]
 
@@ -48,7 +48,6 @@ class Index(val inputFile: String) {
       //Populate idToTitle
       idToTitle(trimId) = trimTitle
 
-      //Populate WordsToPage
       val idSeq: NodeSeq = page \ "text"
 
       //Converting text tags to all strings
@@ -157,7 +156,8 @@ class Index(val inputFile: String) {
   def addFunWordtoPage(
                         id: Int,
                         word: String,
-                        wordPageHelper: mutable.HashMap[String, mutable.HashMap[Int, Double]]
+                        wordPageHelper:
+                        mutable.HashMap[String, mutable.HashMap[Int, Double]]
                       ): Unit = {
 
     val stemWord = stem(word).toLowerCase()
@@ -268,7 +268,7 @@ class Index(val inputFile: String) {
     //Size idToTitle
     val n = idToTitle.size
 
-    // hashmap --> key is the page; val is a hashtable (key: page, value: weight))
+    // hashmap --> key is page; val is a hashtable (key: page, value: weight))
     var previousR = new mutable.HashMap[Int, Double]
 
     //array of n zeros //Hashmap (key: id, value: array)
