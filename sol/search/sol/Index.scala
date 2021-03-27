@@ -71,7 +71,7 @@ class Index(val inputFile: String) {
         if (m.matches("\\[\\[[^\\[]+?\\]\\]")) {
           //case that link doesnt have category or |
           if (!m.contains("|") && !m.contains("Category:")) {
-            val newSet = new String
+            var newSet = new String
             //take out square brackets
             val regex2 = new Regex("([A-Z])\\w+")
             val matchesIterator2 = regex2.findAllMatchIn(m)
@@ -83,19 +83,32 @@ class Index(val inputFile: String) {
               }
             for (m <- matchesList2) {
               addFunWordtoPage(trimId, m, WordstoPage)
-              newSet + m
+              newSet += m
             }
-            idToLinks(trimId).add(newSet)
+            if (idToLinks.contains(trimId)) {
+              idToLinks(trimId) + newSet
+            }
+            else {
+              idToLinks(trimId) = new mutable.HashSet[String]() + newSet
+            }
           }
           //case that link has Presidents|Washington
           else if (m.contains("|")) {
-            val splitWord = m.split("[|]")
+            //take out square brackets
+            val subString = m.substring(2, m.length - 2)
+            val splitWord = subString.split("[|]")
             for (wd <- splitWord) {
               //if word before the |
-              if (splitWord(0).contains(wd)) {
-                idToLinks(trimId).add(wd)
-              } else {
-                addFunWordtoPage(trimId, m, WordstoPage)
+              if (wd == splitWord(0)) {
+                if (idToLinks.contains(trimId)) {
+                  idToLinks(trimId) + wd
+                }
+                else {
+                  idToLinks(trimId) = new mutable.HashSet[String]() + wd
+                }
+              }
+              else if (wd != splitWord(0)) {
+                addFunWordtoPage(trimId, wd, WordstoPage)
               }
             }
           }
@@ -104,7 +117,8 @@ class Index(val inputFile: String) {
           // category, computer, science --> added to word list
           else {
             //regex to take out square brackets and isolate word
-            val newSet = new String
+            //take out square brackets
+            val subString = m.substring(2, m.length - 2)
             val regex3 = new Regex("([A-Z])\\w+")
             val matchesIterator2 = regex3.findAllMatchIn(m)
             //populate idtolink and wordstopage hashmap
@@ -114,9 +128,13 @@ class Index(val inputFile: String) {
               }
             for (m <- matchesList2) {
               addFunWordtoPage(trimId, m, WordstoPage)
-              newSet + m
             }
-            idToLinks(trimId).add(newSet)
+            if (idToLinks.contains(trimId)) {
+              idToLinks(trimId) + subString
+            }
+            else {
+              idToLinks(trimId) = new mutable.HashSet[String]() + subString
+            }
           }
         }
 
@@ -150,7 +168,8 @@ class Index(val inputFile: String) {
       addHash(id) = 1
       wordPageHelper += (stemWord -> addHash)
 
-    } else {
+    }
+    else {
       //add to the value of the inner hashmap by 1 based on the corresponding
       //id
       for ((wrd, innerMap) <- wordPageHelper) {
@@ -158,6 +177,9 @@ class Index(val inputFile: String) {
           for ((innerId, value) <- innerMap) {
             if (id == innerId) {
               innerMap(id) = value + 1
+            }
+            else {
+              innerMap(id) = 1
             }
           }
         }
@@ -230,9 +252,6 @@ class Index(val inputFile: String) {
   def distance(previous: mutable.HashMap[Int, Double],
                current: mutable.HashMap[Int, Double]): Double = {
     var sumDifferences = 0.0
-    //    for (k <- 0 until previous.size) {
-    //      sumDifferences += scala.math.pow(curr - element, 2)
-    //    }
     for (element <- previous.values) {
       for (curr <- current.values) {
         sumDifferences += scala.math.pow(curr - element, 2)
@@ -261,12 +280,6 @@ class Index(val inputFile: String) {
 
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
-      //      for ((currID, _) <- currentR) {
-      //        currentR(currID) = 0.0
-      //        for ((prevID, _) <- previousR) {
-      //          currentR(currID) = currentR(currID) + (weight(currID, prevID) * previousR(prevID))
-      //        }
-      //      }
 
       for (j <- 0 until n) {
         currentR(j) = 0.0
@@ -315,19 +328,6 @@ class Index(val inputFile: String) {
       }
       innerMaxFreq(id) = currMax
     }
-    //    //Calculating Max Frequency
-    //    for ((id, _) <- idToTitle) {
-    //      for ((_, timesMap) <- WordstoPage) {
-    //        for ((id2, totalTimes) <- timesMap) {
-    //          if (id2 == id) {
-    //            if (totalTimes > currMax) {
-    //              currMax = totalTimes
-    //            }
-    //          }
-    //        }
-    //      }
-    //      innerMaxFreq.put(id, currMax)
-    //    }
   }
 
   //Calling methods
@@ -339,13 +339,6 @@ class Index(val inputFile: String) {
 object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
-    println(Index1.idToRank)
-    Index1.pageRank()
-    Index1.looping()
-    Index1.innerMaxFreq2()
-    println(Index1.WordstoPage)
-    println(Index1.innerMaxFreq)
-
     //Print calls
     printDocumentFile(args(2), Index1.innerMaxFreq, Index1.idToRank)
     printTitleFile(args(1), Index1.idToTitle)
