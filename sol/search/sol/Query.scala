@@ -43,6 +43,58 @@ class Query(titleIndex: String,
    * @param userQuery - the query text
    */
   private def query(userQuery: String) {
+    //    //Regex
+    //    val stringSplit = userQuery.toLowerCase().split(" ")
+    //
+    //    //Storing of all non Stop Words
+    //    var nonStopWords = new mutable.HashSet[String]()
+    //
+    //    //Populating nonStopWords
+    //    for (word <- stringSplit) {
+    //      if (!isStopWord(word)) {
+    //        nonStopWords += stem(word)
+    //      }
+    //    }
+    //
+    //    //Storing ids to scores
+    //    var idsToScores = new mutable.HashMap[Int, Double]
+    //
+    //    //Populating IdsToScores
+    //    for (wd <- nonStopWords) {
+    //      if (!wordsToDocumentFrequencies.contains(wd)) {
+    //        nonStopWords -= wd
+    //      }
+    //      else {
+    //        val inner = wordsToDocumentFrequencies(wd)
+    //        for ((id, _) <- inner) {
+    //          if (usePageRank) {
+    //            val sumMax = termFrequency(wd, id) * inverseFrequency(wd)
+    //            idsToScores.put(id, sumMax)
+    //          } else {
+    //            val sumMax = relevanceScore(wd, id)
+    //            idsToScores.put(id, idsToScores(id) + sumMax)
+    //          }
+    //        }
+    //      }
+    //    }
+    //
+    //    //Converting to Array and Sorting
+    //    val mapToTuples = idsToScores.toArray
+    //    val sortedArray =
+    //      mapToTuples.sortWith((first, second) => first._2 > second._2)
+    //
+    //    //Populates Array to be printed
+    //    val n = sortedArray.size
+    //    val funArray = new Array[Int](n)
+    //    var index = 0
+    //    for (key <- sortedArray) {
+    //      funArray(index) = key._1
+    //      index += 1
+    //    }
+    //
+    //    printResults(funArray)
+
+
     if (usePageRank) {
       withPageRank(userQuery.toLowerCase())
     }
@@ -74,10 +126,20 @@ class Query(titleIndex: String,
 
     //Populating IdsToScores
     for (wd <- nonStopWords) {
-      val inner = wordsToDocumentFrequencies(wd)
-      for ((id, freq) <- inner) {
-        val sumMax = termFrequency(wd, id) * inverseFrequency(wd)
-        idsToScores.put(id, sumMax)
+      if (!wordsToDocumentFrequencies.contains(wd)) {
+        nonStopWords -= wd
+      }
+      else {
+        val inner = wordsToDocumentFrequencies(wd)
+        for ((id, freq) <- inner) {
+          val sumMax = termFrequency(wd, id) * inverseFrequency(wd)
+          if (idsToScores.contains(id)) {
+            idsToScores(id) += sumMax
+          }
+          else {
+            idsToScores.put(id, sumMax)
+          }
+        }
       }
     }
 
@@ -122,10 +184,20 @@ class Query(titleIndex: String,
 
     //Populating IdsToScores
     for (wd <- nonStopWords) {
-      val inner = wordsToDocumentFrequencies(wd)
-      for ((id, freq) <- inner) {
-        val sumMax = relevanceScore(wd, id)
-        idsToScores.put(id, idsToScores(id) + sumMax)
+      if (!wordsToDocumentFrequencies.contains(wd)) {
+        nonStopWords -= wd
+      }
+      else {
+        val inner = wordsToDocumentFrequencies(wd)
+        for ((id, freq) <- inner) {
+          val sumMax = relevanceScore(wd, id)
+          if (idsToScores.contains(id)) {
+            idsToScores(id) += sumMax
+          }
+          else {
+            idsToScores.put(id, sumMax)
+          }
+        }
       }
     }
 

@@ -66,8 +66,7 @@ class Index(val inputFile: String) {
       //empty string to populate if there is a link
       var newSet = new String
 
-      //take out square brackets
-      val regex2 = new Regex("([A-Z])\\w+")
+
 
       //for loop
       for (m <- matchesList) {
@@ -76,8 +75,8 @@ class Index(val inputFile: String) {
           //case that link doesnt have category or |
           if (!m.contains("|") && !m.contains("Category:")) {
             //take out square brackets
-            val matchesIterator2 = regex2.findAllMatchIn(m)
-            // Convert the Iterator to a List and extract the matched substrings
+            val regex3 = new Regex("([A-Z0-9+])\\w+")
+            val matchesIterator2 = regex3.findAllMatchIn(m)
             val matchesList2 =
               matchesIterator2.toList.map { aMatch =>
                 aMatch.matched
@@ -87,7 +86,7 @@ class Index(val inputFile: String) {
               newSet += m
             }
             if (idToLinks.contains(trimId)) {
-              idToLinks(trimId) + newSet
+              idToLinks(trimId) += newSet
             }
             else {
               idToLinks(trimId) = new mutable.HashSet[String]() + newSet
@@ -110,7 +109,7 @@ class Index(val inputFile: String) {
                 }
               }
               else if (wd != splitWord(0)) {
-                val regex3 = new Regex("([A-Z])\\w+")
+                val regex3 = new Regex("([A-Z0-9+])\\w+")
                 val matchesIterator2 = regex3.findAllMatchIn(wd)
                 val matchesList2 =
                   matchesIterator2.toList.map { aMatch =>
@@ -223,7 +222,6 @@ class Index(val inputFile: String) {
    * @return a double representing the square root of the sum of differences
    */
   def weight(kID: Int, jID: Int): Double = {
-    //questions? : do we need to calculate j->k as well
 
     //Total number of unique pages that k links to
     val unique = idToLinks.get(kID).size
@@ -231,26 +229,31 @@ class Index(val inputFile: String) {
     //Size idToTitle
     val n = idToTitle.size
 
-    //If page doesn't link to anything
-    if (unique == 0) {
-      for ((id, array) <- idToLinks) {
-        if (id != jID) {
-          array.add(getTitle(jID))
-        }
-      }
-    }
-
     //get title of j
     val titleJ = getTitle(jID)
 
     //Epsilon
     val epsilon = 0.15
 
+    //If page doesn't link to anything
+    if (unique == 0) {
+      (epsilon / n.toDouble) + ((1 - epsilon) / (n - 1))
+    }
+
     //If k links to j
-    if (idToLinks.get(kID).contains(titleJ)) {
+    else if (idToLinks(kID).contains(titleJ) &&
+      !idToLinks(kID).contains(getTitle(kID))) {
       (epsilon / n.toDouble) + ((1 - epsilon) / unique)
 
-    } else {
+    }
+    //if page links to itself
+    else if (idToLinks(kID).contains(getTitle(kID))) {
+      epsilon / n.toDouble
+    }
+    else if (idToLinks(kID) == null) {
+      0
+    }
+    else {
       epsilon / n.toDouble
     }
   }
@@ -262,13 +265,11 @@ class Index(val inputFile: String) {
    * @param current  : HashMap
    * @return a double representing the square root of the sum of differences
    */
-  def distance(previous: mutable.HashMap[Int, Double],
-               current: mutable.HashMap[Int, Double]): Double = {
+  def distance(previous: Array[Double],
+               current: Array[Double]): Double = {
     var sumDifferences = 0.0
-    for (element <- previous.values) {
-      for (curr <- current.values) {
-        sumDifferences += scala.math.pow(curr - element, 2)
-      }
+    for (n <- previous.indices) {
+      sumDifferences += scala.math.pow(current(n) - previous(n), 2)
     }
     scala.math.sqrt(sumDifferences)
   }
@@ -280,36 +281,36 @@ class Index(val inputFile: String) {
     //Arbitrary number
     val n = 50
 
+    //Number of pages
+    val size = idToTitle.size
+
     // hashmap --> key is page; val is a hashtable (key: page, value: weight))
-    var previousR = new mutable.HashMap[Int, Double]
+    var previousR = Array.fill[Double](size)(0.0)
 
     //array of n zeros //Hashmap (key: id, value: array)
-    val currentR = new mutable.HashMap[Int, Double]
-    for ((id, _) <- idToTitle) {
-      previousR.put(id, 0)
-      currentR.put(id, 1 / n.toDouble)
-    }
+    val currentR = Array.fill[Double](size)(1 / n.toDouble)
 
     //Calculates distance and weights
     while (distance(previousR, currentR) > 0.0001) {
       previousR = currentR
 
-      for (j <- 0 until idToTitle.size) {
-        if (idToTitle.contains(j)) {
+      var j = 0
+      for ((id1, title) <- idToTitle) {
+        if (idToTitle.contains(id1)) {
           currentR(j) = 0.0
         }
-        for (k <- 0 until idToTitle.size) {
-          if (idToTitle.contains(k)) {
+        var k = 0
+        for ((id2, title) <- idToTitle) {
+          if (idToTitle.contains(id2)) {
             currentR(j) += (weight(j, k) * previousR(k))
           }
+          k = k + 1
         }
+        idToRank(id1) = currentR(j)
+        j = j + 1
       }
     }
 
-    //Populate idToRank
-    for ((id, value) <- currentR) {
-      idToRank.put(id, value)
-    }
   }
 
   /**
@@ -320,11 +321,10 @@ class Index(val inputFile: String) {
    */
   def innerMaxFreq2(): Unit = {
 
-    val innerMap = new HashMap[String, Double]
     val idToWordFreq = new HashMap[Integer, HashMap[String, Double]]
 
-    //populate inner hash map
     for ((id, _) <- idToTitle) {
+      val innerMap = new HashMap[String, Double]
       for ((wd, timesMap) <- WordstoPage) {
         for ((id2, totalTimes) <- timesMap) {
           if (id2 == id) {
@@ -351,14 +351,13 @@ class Index(val inputFile: String) {
 
   //Calling methods
   looping()
-  innerMaxFreq2()
   pageRank()
+  innerMaxFreq2()
 }
 
 object Index {
   def main(args: Array[String]) {
     val Index1 = new Index(args(0))
-    //Print calls
     printDocumentFile(args(2), Index1.innerMaxFreq, Index1.idToRank)
     printTitleFile(args(1), Index1.idToTitle)
     printWordsFile(args(3), Index1.WordstoPage)
