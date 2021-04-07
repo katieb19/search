@@ -27,14 +27,13 @@ class Index(val inputFile: String) {
   val mainNode: Node = xml.XML.loadFile(inputFile)
 
   //to access all pages
-  val pageSeg: NodeSeq = mainNode \ "page"
+  var pageSeg: NodeSeq = mainNode \ "page"
 
   //Total number of pages
   val n: Int = idToLinks.size
 
 
   def looping(): Unit = {
-
     for (page <- pageSeg) {
 
       //Getting title and ID from page
@@ -63,10 +62,6 @@ class Index(val inputFile: String) {
         aMatch.matched
       }
 
-      //empty string to populate if there is a link
-      var newSet = new String
-
-
 
       //for loop
       for (m <- matchesList) {
@@ -74,80 +69,17 @@ class Index(val inputFile: String) {
         if (m.matches("\\[\\[[^\\[]+?\\]\\]")) {
           //case that link doesnt have category or |
           if (!m.contains("|") && !m.contains("Category:")) {
-            //take out square brackets
-            val regex3 = new Regex("([A-Z0-9+])\\w+")
-            val matchesIterator2 = regex3.findAllMatchIn(m)
-            var matchesList2 =
-              matchesIterator2.toList.map { aMatch =>
-                aMatch.matched
-              }
-            for (m2 <- matchesList2) {
-              addFunWordtoPage(trimId, m2.toLowerCase(), WordstoPage)
-              newSet += m2
-              matchesList2 = matchesList2.tail
-            }
-            if (idToLinks.contains(trimId)) {
-              idToLinks(trimId) += newSet
-            }
-            else {
-              idToLinks(trimId) = new mutable.HashSet[String]() + newSet
-            }
+            plainLink(m, trimId)
           }
           //case that link has Presidents|Washington
           else if (m.contains("|")) {
-            //take out square brackets
-            val subString = m.substring(2, m.length - 2)
-            val splitWord = subString.split("[|]")
-            for (wd <- splitWord) {
-              //if word before the |
-              if (wd == splitWord(0)) {
-                if (idToLinks.contains(trimId)) {
-                  idToLinks(trimId) + wd
-                }
-                else {
-                  val set2 = new mutable.HashSet[String]()
-                  idToLinks(trimId) = set2 + wd
-                }
-              }
-              else if (wd != splitWord(0)) {
-                val regex3 = new Regex("([A-Z0-9+])\\w+")
-                val matchesIterator3 = regex3.findAllMatchIn(wd)
-                var matchesList3 =
-                  matchesIterator3.toList.map { aMatch =>
-                    aMatch.matched
-                  }
-                for (wd2 <- matchesList3) {
-                  addFunWordtoPage(trimId, wd2.toLowerCase(), WordstoPage)
-                  matchesList3 = matchesList3.tail
-                }
-              }
-            }
+            dashLink(m, trimId)
           }
-
           //else if category [Category: Computer Science] -->
           // Category: Computer Science
           // category, computer, science --> added to word list
           else {
-            //regex to take out square brackets and isolate word
-            //take out square brackets
-            val subString = m.substring(2, m.length - 2)
-            //populate idtolink and wordstopage hashmap
-            val regex3 = new Regex("([A-Z])\\w+")
-            val matchesIterator4 = regex3.findAllMatchIn(m)
-            var matchesList4 =
-              matchesIterator4.toList.map { aMatch =>
-                aMatch.matched
-              }
-            for (m <- matchesList4) {
-              addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
-              matchesList4 = matchesList4.tail
-            }
-            if (idToLinks.contains(trimId)) {
-              idToLinks(trimId) + subString
-            }
-            else {
-              idToLinks(trimId) = new mutable.HashSet[String]() + subString
-            }
+            categoryLink(m, trimId)
           }
         }
 
@@ -158,9 +90,84 @@ class Index(val inputFile: String) {
         }
         matchesList = matchesList.tail
       }
+      pageSeg = pageSeg.tail
     }
   }
 
+
+  def dashLink(m: String, id: Int): Unit = {
+    //take out square brackets
+    val subString = m.substring(2, m.length - 2)
+    val splitWord = subString.split("[|]")
+    for (wd <- splitWord) {
+      //if word before the |
+      if (wd == splitWord(0)) {
+        if (idToLinks.contains(id)) {
+          idToLinks(id) + wd
+        }
+        else {
+          val set2 = new mutable.HashSet[String]()
+          idToLinks(id) = set2 + wd
+        }
+      }
+      else if (wd != splitWord(0)) {
+        val regex3 = new Regex("([A-Z0-9+])\\w+")
+        val matchesIterator3 = regex3.findAllMatchIn(wd)
+        var matchesList3 =
+          matchesIterator3.toList.map { aMatch =>
+            aMatch.matched
+          }
+        for (wd2 <- matchesList3) {
+          addFunWordtoPage(id, wd2.toLowerCase(), WordstoPage)
+          matchesList3 = matchesList3.tail
+        }
+      }
+    }
+  }
+
+  def plainLink(m: String, id: Int): Unit = {
+    //empty string to populate if there is a link
+    var newSet = new String
+    //take out square brackets
+    val regex3 = new Regex("([A-Z0-9+])\\w+")
+    val matchesIterator2 = regex3.findAllMatchIn(m)
+    var matchesList2 =
+      matchesIterator2.toList.map { aMatch =>
+        aMatch.matched
+      }
+    for (m2 <- matchesList2) {
+      addFunWordtoPage(id, m2.toLowerCase(), WordstoPage)
+      newSet += m2
+      matchesList2 = matchesList2.tail
+    }
+    if (idToLinks.contains(id)) {
+      idToLinks(id) += newSet
+    }
+    else {
+      idToLinks(id) = new mutable.HashSet[String]() + newSet
+    }
+  }
+
+  def categoryLink(m: String, id: Int): Unit = {
+    val subString = m.substring(2, m.length - 2)
+    //populate idtolink and wordstopage hashmap
+    val regex3 = new Regex("([A-Z])\\w+")
+    val matchesIterator4 = regex3.findAllMatchIn(m)
+    var matchesList4 =
+      matchesIterator4.toList.map { aMatch =>
+        aMatch.matched
+      }
+    for (m <- matchesList4) {
+      addFunWordtoPage(id, m.toLowerCase(), WordstoPage)
+      matchesList4 = matchesList4.tail
+    }
+    if (idToLinks.contains(id)) {
+      idToLinks(id) + subString
+    }
+    else {
+      idToLinks(id) = new mutable.HashSet[String]() + subString
+    }
+  }
 
   /**
    * Adds word to WordToPages HashMap
