@@ -59,7 +59,7 @@ class Index(val inputFile: String) {
       val matchesIterator = regex.findAllMatchIn(textIdSeq)
 
       // Convert the Iterator to a List and extract the matched substrings
-      val matchesList = matchesIterator.toList.map { aMatch =>
+      var matchesList = matchesIterator.toList.map { aMatch =>
         aMatch.matched
       }
 
@@ -77,13 +77,14 @@ class Index(val inputFile: String) {
             //take out square brackets
             val regex3 = new Regex("([A-Z0-9+])\\w+")
             val matchesIterator2 = regex3.findAllMatchIn(m)
-            val matchesList2 =
+            var matchesList2 =
               matchesIterator2.toList.map { aMatch =>
                 aMatch.matched
               }
-            for (m <- matchesList2) {
-              addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
-              newSet += m
+            for (m2 <- matchesList2) {
+              addFunWordtoPage(trimId, m2.toLowerCase(), WordstoPage)
+              newSet += m2
+              matchesList2 = matchesList2.tail
             }
             if (idToLinks.contains(trimId)) {
               idToLinks(trimId) += newSet
@@ -110,13 +111,14 @@ class Index(val inputFile: String) {
               }
               else if (wd != splitWord(0)) {
                 val regex3 = new Regex("([A-Z0-9+])\\w+")
-                val matchesIterator2 = regex3.findAllMatchIn(wd)
-                val matchesList2 =
-                  matchesIterator2.toList.map { aMatch =>
+                val matchesIterator3 = regex3.findAllMatchIn(wd)
+                var matchesList3 =
+                  matchesIterator3.toList.map { aMatch =>
                     aMatch.matched
                   }
-                for (wd2 <- matchesList2) {
+                for (wd2 <- matchesList3) {
                   addFunWordtoPage(trimId, wd2.toLowerCase(), WordstoPage)
+                  matchesList3 = matchesList3.tail
                 }
               }
             }
@@ -131,13 +133,14 @@ class Index(val inputFile: String) {
             val subString = m.substring(2, m.length - 2)
             //populate idtolink and wordstopage hashmap
             val regex3 = new Regex("([A-Z])\\w+")
-            val matchesIterator2 = regex3.findAllMatchIn(m)
-            val matchesList2 =
-              matchesIterator2.toList.map { aMatch =>
+            val matchesIterator4 = regex3.findAllMatchIn(m)
+            var matchesList4 =
+              matchesIterator4.toList.map { aMatch =>
                 aMatch.matched
               }
-            for (m <- matchesList2) {
+            for (m <- matchesList4) {
               addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
+              matchesList4 = matchesList4.tail
             }
             if (idToLinks.contains(trimId)) {
               idToLinks(trimId) + subString
@@ -153,9 +156,12 @@ class Index(val inputFile: String) {
           //Populate word to freq table
           addFunWordtoPage(trimId, m.toLowerCase(), WordstoPage)
         }
+        matchesList = matchesList.tail
       }
     }
   }
+
+  var finalMap = new mutable.HashMap[String, mutable.HashMap[Int, Double]]()
 
   /**
    * Adds word to WordToPages HashMap
@@ -186,33 +192,22 @@ class Index(val inputFile: String) {
         if (stemWord.equals(wrd)) {
           for ((innerId, value) <- innerMap) {
             if (id == innerId) {
-              innerMap(id) = value + 1
+              finalMap(wrd)(id) = value + 1
             }
             else {
-              innerMap(id) = 1
+              finalMap(wrd)(id) = 1
             }
+            innerMap.remove(innerId)
+          }
+          if (innerMap.isEmpty) {
+            wordPageHelper.remove(wrd)
           }
         }
       }
+      finalMap
     }
   }
 
-  /**
-   * Helper to get title from id since idToTitles.get(id) returns
-   * Option[String] rather than String
-   *
-   * @param id : given document id
-   * @return title corresponding to that id
-   */
-  def getTitle(id: Int): String = {
-    var result = ""
-    for ((key, title) <- idToTitle) {
-      if (key == id) {
-        result = title
-      }
-    }
-    result
-  }
 
   /**
    * Calculate the weight of page k on page j
@@ -230,7 +225,7 @@ class Index(val inputFile: String) {
     val n = idToTitle.size
 
     //get title of j
-    val titleJ = getTitle(jID)
+    val titleJ = idToTitle.get(jID).toString
 
     //Epsilon
     val epsilon = 0.15
@@ -242,12 +237,12 @@ class Index(val inputFile: String) {
 
     //If k links to j
     else if (idToLinks(kID).contains(titleJ) &&
-      !idToLinks(kID).contains(getTitle(kID))) {
+      !idToLinks(kID).contains(idToTitle.get(kID).toString)) {
       (epsilon / n.toDouble) + ((1 - epsilon) / unique)
 
     }
     //if page links to itself
-    else if (idToLinks(kID).contains(getTitle(kID))) {
+    else if (idToLinks(kID).contains(idToTitle.get(kID).toString)) {
       epsilon / n.toDouble
     }
     else if (idToLinks(kID) == null) {
@@ -357,9 +352,14 @@ class Index(val inputFile: String) {
 
 object Index {
   def main(args: Array[String]) {
-    val Index1 = new Index(args(0))
-    printDocumentFile(args(2), Index1.innerMaxFreq, Index1.idToRank)
-    printTitleFile(args(1), Index1.idToTitle)
-    printWordsFile(args(3), Index1.WordstoPage)
+    if (args.length != 4) {
+      println("Not enough arguments")
+    }
+    else {
+      val Index1 = new Index(args(0))
+      printDocumentFile(args(2), Index1.innerMaxFreq, Index1.idToRank)
+      printTitleFile(args(1), Index1.idToTitle)
+      printWordsFile(args(3), Index1.WordstoPage)
+    }
   }
 }

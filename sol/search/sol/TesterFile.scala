@@ -47,18 +47,6 @@ object TesterFile {
     index.addFunWordtoPage(2, "lalala", multipleWordsToPages)
     t.checkExpect(multipleWordsToPages.size, 3)
   }
-
-
-  def testGetTitle(t: Tester): Unit = {
-    setupGetTitle()
-    val index = new
-        Index("C:\\Users\\katie\\Documents\\CS18\\GitHub\\" +
-          "search-cbaumga1-vagulia3-1\\sol\\search\\sol\\SmallerWiki.xml")
-
-    t.checkExpect(index.getTitle(0), "Dog")
-    t.checkExpect(index.getTitle(1), "Hedgehog")
-
-  }
 }
 
 object Main extends App {
