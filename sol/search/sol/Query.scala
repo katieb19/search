@@ -7,7 +7,7 @@ import search.src.StopWords.isStopWord
 import java.io._
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
-import scala.math.log10
+import scala.math.log
 
 /**
  * Represents a query REPL built off of a specified index
@@ -105,7 +105,12 @@ class Query(titleIndex: String,
       index += 1
     }
 
-    printResults(funArray)
+    if (funArray.isEmpty) {
+      println("No results available")
+    }
+    else {
+      printResults(funArray)
+    }
   }
 
   /**
@@ -248,7 +253,7 @@ class Query(titleIndex: String,
     }
 
     //Return idf
-    log10(n) / log10(n_i)
+    log(n / n_i)
   }
 
   /**
@@ -259,7 +264,7 @@ class Query(titleIndex: String,
    * @return relevance score
    */
   def relevanceScore(iWord: String, jID: Int): Double = {
-    var score = (termFrequency(iWord, jID)) * (inverseFrequency(iWord))
+    var score = termFrequency(iWord, jID) * inverseFrequency(iWord)
 
     for ((id, rank) <- idsToPageRank) {
       if (id == jID) {

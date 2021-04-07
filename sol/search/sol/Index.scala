@@ -161,7 +161,6 @@ class Index(val inputFile: String) {
     }
   }
 
-  var finalMap = new mutable.HashMap[String, mutable.HashMap[Int, Double]]()
 
   /**
    * Adds word to WordToPages HashMap
@@ -192,19 +191,14 @@ class Index(val inputFile: String) {
         if (stemWord.equals(wrd)) {
           for ((innerId, value) <- innerMap) {
             if (id == innerId) {
-              finalMap(wrd)(id) = value + 1
+              innerMap(id) = value + 1
             }
             else {
-              finalMap(wrd)(id) = 1
+              innerMap(id) = 1
             }
-            innerMap.remove(innerId)
-          }
-          if (innerMap.isEmpty) {
-            wordPageHelper.remove(wrd)
           }
         }
       }
-      finalMap
     }
   }
 
